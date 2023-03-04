@@ -70,7 +70,7 @@ else:
 
 #Step 2: #Basecall pod5 files 
 if basecall_pod ==True: 
-    cmd=os.path.expanduser(basecaller_path)' -i '+mod_pod_dir+' -s '+mod_fastq_dir+' -c '+guppy_config_file+' -x auto --bam_out --index --moves_out -a '+os.path.join(ref_dir,'x'+os.path.basename(xna_ref_fasta))
+    cmd=os.path.expanduser(basecaller_path)+' -i '+mod_pod_dir+' -s '+mod_fastq_dir+' -c '+guppy_config_file+' -x auto --bam_out --index --moves_out -a '+os.path.join(ref_dir,'x'+os.path.basename(xna_ref_fasta))
     os.system(cmd)
 else: 
     print('Xemora [STATUS] - Skipping POD5 basecalling for modified bases.')
