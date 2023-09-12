@@ -29,6 +29,7 @@ xna_fast5_dir = os.path.expanduser(sys.argv[2])
 xna_ref_fasta = os.path.expanduser(sys.argv[3])
 dna_fast5_dir = os.path.expanduser(sys.argv[4])
 dna_ref_fasta = os.path.expanduser(sys.argv[5])
+#ext_dir = "~/xenomorph/xemora-beta/xemora-test/230309_Xemora_PZ_GC_train/chunks/training_chunks.npz"
 
 #Generate directories
 working_dir = check_make_dir(working_dir)
@@ -51,7 +52,14 @@ if os.path.isfile(os.path.expanduser(xna_ref_fasta)):
     cmd = 'python lib/xr_fasta2x_rc.py '+os.path.expanduser(xna_ref_fasta)+' '+os.path.join(ref_dir,'x'+os.path.basename(xna_ref_fasta))
     os.system(cmd)
 else: 
-    print('Xemora [ERROR] - Reference fasta file not file. Please check file exist or file path.')
+    print('Xemora [ERROR] - XNA Reference fasta file not found. Please check file exist or file path.')
+    sys.exit()
+
+if os.path.isfile(os.path.expanduser(dna_ref_fasta)): 
+    cmd = 'python lib/xr_fasta2x_rc.py '+os.path.expanduser(dna_ref_fasta)+' '+os.path.join(ref_dir,'x'+os.path.basename(dna_ref_fasta))
+    os.system(cmd)
+else: 
+    print('Xemora [ERROR] - DNA Reference fasta file not found. Please check file exist or file path.')
     sys.exit()
 
 
@@ -72,6 +80,7 @@ else:
 if basecall_pod ==True: 
     cmd=os.path.expanduser(basecaller_path)+' -i '+mod_pod_dir+' -s '+mod_fastq_dir+' -c '+guppy_config_file+' -x auto --bam_out --index --moves_out -a '+os.path.join(ref_dir,'x'+os.path.basename(xna_ref_fasta))
     os.system(cmd)
+
 else: 
     print('Xemora [STATUS] - Skipping POD5 basecalling for modified bases.')
 
@@ -79,6 +88,7 @@ else:
 if basecall_pod ==True: 
     cmd=os.path.expanduser(basecaller_path)+' -i '+can_pod_dir+' -s '+can_fastq_dir+' -c '+guppy_config_file+' -x auto --bam_out --index --moves_out -a '+os.path.join(ref_dir,'x'+os.path.basename(dna_ref_fasta))
     os.system(cmd)
+
 else: 
     print('Xemora [STATUS] - Skipping POD5 basecalling for canonical bases.')
 
@@ -108,7 +118,7 @@ cmd = 'python lib/xr_xfasta2bed.py '+os.path.join(ref_dir,'x'+os.path.basename(x
 os.system(cmd)
 
 print('Xemora [STATUS] - Generating bed file for canonical base.')
-cmd = 'python lib/xr_xfasta2bed.py '+os.path.join(ref_dir,'x'+os.path.basename(xna_ref_fasta))+' '+os.path.join(ref_dir,can_base+'.bed '+mod_base+' '+can_base)
+cmd = 'python lib/xr_xfasta2bed.py '+os.path.join(ref_dir,'x'+os.path.basename(dna_ref_fasta))+' '+os.path.join(ref_dir,can_base+'.bed '+mod_base+' '+can_base)
 os.system(cmd)
 
 
@@ -131,6 +141,8 @@ if regenerate_chunks == True:
       --mod-base '+mod_base+' '+mod_base+' \
       --motif '+can_base+' 0 \
       --kmer-context-bases '+kmer_context+' \
+      --refine-kmer-level-table '+kmer_table_path+' \
+      --refine-rough-rescale '+' \
       --chunk-context '+chunk_context
     os.system(cmd)
 
@@ -147,15 +159,20 @@ if regenerate_chunks == True:
       --mod-base-control \
       --motif '+can_base+' 0 \
       --kmer-context-bases '+kmer_context+' \
+      --refine-kmer-level-table '+kmer_table_path+' \
+      --refine-rough-rescale '+' \
       --chunk-context '+chunk_context
     os.system(cmd)
 
-if regenerate_chunks == True: 
+
+
+if remerge_chunks == True: 
     print('Xemora [STATUS] - Merging chunks for training.')
     cmd = 'remora \
       dataset merge \
-      --input-dataset '+os.path.join(chunk_dir,'mod_chunks.npz')+' 40_000 \
-      --input-dataset '+os.path.join(chunk_dir,'can_chunks.npz')+' 40_000 \
+      --balance \
+      --input-dataset '+os.path.join(chunk_dir,'mod_chunks.npz')+' '+chunk_num+'_000 \
+      --input-dataset '+os.path.join(chunk_dir,'can_chunks.npz')+' '+chunk_num+'_000 \
       --output-dataset '+os.path.join(chunk_dir,'training_chunks.npz')
     os.system(cmd)
 
@@ -170,7 +187,10 @@ cmd = 'remora \
   --overwrite \
   --kmer-context-bases '+kmer_context+' \
   --chunk-context '+chunk_context+' \
-  --batch-size 100'
+  --val-prop '+val_proportion+' \
+  --batch-size 100 '# + '\
+  #--ext-val ' + ext_dir
+
 os.system(cmd)
 
 

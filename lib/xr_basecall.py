@@ -88,6 +88,8 @@ os.system(cmd)
 
 #Step 5: Generate Chunks. 
 if regenerate_chunks == True: 
+    print(mod_bam_dir)
+    print(fast5_dir)
     print('Xemora  [STATUS] - Generating chunks for modified basecalling.')
     cmd = 'remora \
       dataset prepare \
@@ -98,6 +100,8 @@ if regenerate_chunks == True:
       --mod-base '+mod_base+' '+mod_base+' \
       --motif '+can_base+' 0 \
       --kmer-context-bases '+kmer_context+' \
+      --refine-kmer-level-table '+kmer_table_path+' \
+      --refine-rough-rescale '+' \
       --chunk-context '+chunk_context
     os.system(cmd)
 
