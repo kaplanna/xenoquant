@@ -29,7 +29,7 @@ xna_base_pairs = ['BS','PZ','JV','XK']
 confounding_pairs =  ['BA','SA','PG','ZC','JC','VG','XA','KG'] 
 
 #If XNAs are given different standard base substitutions, set them up as seperate (e.g, ['P','Z'])
-xna_segmentation_model_sets = ['BS','PZ','JV','XK', 'QW','ER']
+xna_segmentation_model_sets = ['B','S','PZ','JV','X', 'K', 'QW','ER']
 
 #Possible XNA bases
 xna_bases = np.concatenate(list(list(i) for i in xna_base_pairs))
@@ -52,13 +52,34 @@ basecall_pod = False
 #Re-generate BAM files for reference-based basecalling.
 regenerate_bam = False
 
+#Converting BAM files for data correction 
+bam_convert = False
+
+#Data extraction, filtering, and heptamer correction 
+data_fix = False
+
+#SAM file sequence corrections 
+sam_corrections = False
+
+#Convering SAM files for training 
+sam_convert = False
+
 #Re-generate training or basecalling chunks.
-regenerate_chunks = True
+regenerate_chunks = False
+
+#Merge chunks again for training data. 
+remerge_chunks = True
 ############################################################
 
 
 ############################################################
 ##Model Training and Basecalling Parameters
+
+#kmer table 
+kmer_table_path = 'models/remora/4mer_9.4.1.csv'
+
+#ml model (ConvLSTM_w_ref.py or Conv_w_ref.py')
+ml_model_path = 'models/ConvLSTM_w_ref.py'
 
 #Modified base in Fasta sequence you wish to train model or use model to basecall
 mod_base = 'Z'
@@ -72,6 +93,14 @@ kmer_context ='4 4'
 #Extent of chunk context (centered around modified base) 
 chunk_context = '50 50' 
 
+#Proportion of reads to use for validation 
+val_proportion = '0.5'
+
+#Number of chunks for training (in thousands: e.g.: '200' = 200,000 chunks) 
+chunk_num = '50000'
+
+
+
 
 ############################################################
 #Guppy Base caller configuration
@@ -83,6 +112,6 @@ basecaller_path ='~/ont-guppy/bin/guppy_basecaller'
 device_type = 'cuda:all' 
 
 #Config file 
-guppy_config_file = 'dna_r9.4.1_450bps_hac.cfg' 
-
+guppy_config_file = 'dna_r9.4.1_450bps_hac.cfg'
+#guppy_config_file = 'dna_r10.4.1_e8.2_400bps_hac.cfg'
 

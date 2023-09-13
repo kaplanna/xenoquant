@@ -181,7 +181,7 @@ print('Xemora [STATUS] - Training model.')
 cmd = 'remora \
   model train \
   '+os.path.join(chunk_dir,'training_chunks.npz')+' \
-  --model models/Conv_w_ref.py \
+  --model '+ml_model_path+' \
   --device 0 \
   --output-path '+model_dir+' \
   --overwrite \
