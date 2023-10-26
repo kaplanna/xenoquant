@@ -95,16 +95,42 @@ else:
 
 
 #Step 3: Merge Bam files 
-if os.path.isfile(os.path.join(mod_bam_dir,os.path.basename(mod_bam_dir))+'.bam') == False or regenerate_bam == True: 
-    cmd = 'samtools merge '+os.path.join(mod_bam_dir,os.path.basename(mod_bam_dir))+'.bam'+' '+os.path.join(mod_fastq_dir,'pass/*.bam -f')
-    print('Xemora [STATUS] - Merging modified BAM files.')
-    os.system(cmd)
+#if os.path.isfile(os.path.join(mod_bam_dir,os.path.basename(mod_bam_dir))+'.bam') == False or regenerate_bam == True: 
+#    cmd = 'samtools merge '+os.path.join(mod_bam_dir,os.path.basename(mod_bam_dir))+'.bam'+' '+os.path.join(mod_fastq_dir,'pass/*.bam -f')
+#    print('Xemora [STATUS] - Merging modified BAM files.')
+#    os.system(cmd)
 
-if os.path.isfile(os.path.join(can_bam_dir,os.path.basename(can_bam_dir))+'.bam') == False or regenerate_bam == True: 
-    cmd = 'samtools merge '+os.path.join(can_bam_dir,os.path.basename(can_bam_dir))+'.bam'+' '+os.path.join(can_fastq_dir,'pass/*.bam -f')
-    print('Xemora [STATUS] - Merging canonical BAM files.')
-    os.system(cmd)
+#if os.path.isfile(os.path.join(can_bam_dir,os.path.basename(can_bam_dir))+'.bam') == False or regenerate_bam == True: 
+#    cmd = 'samtools merge '+os.path.join(can_bam_dir,os.path.basename(can_bam_dir))+'.bam'+' '+os.path.join(can_fastq_dir,'pass/*.bam -f')
+#    print('Xemora [STATUS] - Merging canonical BAM files.')
+#    os.system(cmd)
 
+#Step 3: Merge Bam files 
+
+# Merge mod bam files
+if os.path.isfile(os.path.join(mod_bam_dir, os.path.basename(mod_bam_dir)) + '.bam') == False or regenerate_bam == True: 
+    # Merging pass bam files
+    cmd_pass = 'samtools merge ' + os.path.join(mod_bam_dir, os.path.basename(mod_bam_dir)) + '.bam ' + os.path.join(mod_fastq_dir, 'pass/*.bam -f')
+    print('Xemora [STATUS] - Merging modified PASS BAM files.')
+    os.system(cmd_pass)
+    if merge_fail == True:
+        # Merging fail bam files
+        cmd_fail = 'samtools merge ' + os.path.join(mod_bam_dir, os.path.basename(mod_bam_dir)) + '_fail.bam ' + os.path.join(mod_fastq_dir, 'fail/*.bam -f')
+        print('Xemora [STATUS] - Merging modified FAIL BAM files.')
+        os.system(cmd_fail)
+
+# Merge can bam files
+if os.path.isfile(os.path.join(can_bam_dir, os.path.basename(can_bam_dir)) + '.bam') == False or regenerate_bam == True: 
+    # Merging pass bam files
+    cmd_pass = 'samtools merge ' + os.path.join(can_bam_dir, os.path.basename(can_bam_dir)) + '.bam ' + os.path.join(can_fastq_dir, 'pass/*.bam -f')
+    print('Xemora [STATUS] - Merging canonical PASS BAM files.')
+    os.system(cmd_pass)
+
+    if merge_fail == True:
+        # Merging fail bam files
+        cmd_fail = 'samtools merge ' + os.path.join(can_bam_dir, os.path.basename(can_bam_dir)) + '_fail.bam ' + os.path.join(can_fastq_dir, 'fail/*.bam -f')
+        print('Xemora [STATUS] - Merging canonical FAIL BAM files.')
+        os.system(cmd_fail)
 
 
 
@@ -121,11 +147,35 @@ print('Xemora [STATUS] - Generating bed file for canonical base.')
 cmd = 'python lib/xr_xfasta2bed.py '+os.path.join(ref_dir,'x'+os.path.basename(dna_ref_fasta))+' '+os.path.join(ref_dir,can_base+'.bed '+mod_base+' '+can_base)
 os.system(cmd)
 
+#Optional Bed Filtering
+if bed_filtering == True:
+    # Bed file directories
+    mod_bed_file_path = os.path.join(ref_dir, mod_base + '.bed')
+    can_bed_file_path = os.path.join(ref_dir, can_base + '.bed')
+
+    # Read the .bed file into a Pandas DataFrame
+    mod_bed_df = pd.read_csv(mod_bed_file_path, delimiter=r'\s+', header=None)
+    can_bed_df = pd.read_csv(can_bed_file_path, delimiter=r'\s+', header=None)
+
+    # Name the columns for better readability
+    mod_bed_df.columns = ['Alignment', 'Start', 'End', 'Name', 'Score', 'Strand']
+    can_bed_df.columns = ['Alignment', 'Start', 'End', 'Name', 'Score', 'Strand']
+
+    # Filter the DataFrame to only keep rows where 'Alignment' equals the specified alignments
+    mod_bed_df = mod_bed_df.query(f'Alignment == "{mod_alignment}"')
+    can_bed_df = can_bed_df.query(f'Alignment == "{can_alignment}"')
+    #print(mod_bed_df)
+    #print(can_bed_df)
+    mod_bed_df.to_csv(mod_bed_file_path, sep='\t', header=False, index=False)
+    can_bed_df.to_csv(can_bed_file_path, sep='\t', header=False, index=False)
 
 
+    
+    
 if os.stat(os.path.join(ref_dir,mod_base+'.bed')).st_size == 0 or os.stat(os.path.join(ref_dir,can_base+'.bed')).st_size == 0: 
-    print('Xemora [ERROR] - Empty bed file generated. Check that XNA bases were present in sequence of input fasta file, and correct XNA base specified.')
+    print('Xemora [ERROR] - Empty bed file generated. Check that XNA bases were present in sequence of input fasta file, and correct XNA base specified. Also check if bed_filtering is set')
     sys.exit()
+
 
 
 

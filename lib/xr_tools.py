@@ -1,3 +1,4 @@
+
 ########################################################################
 ########################################################################
 """
@@ -94,5 +95,5 @@ def check_make_dir(directory):
 
 #Fast5 to pod5 conversion
 def cod5_to_fast5(fast5_input, pod5_output):
-    cmd = 'pod5 convert fast5 '+fast5_input+'/*.fast5 '+pod5_output
+    cmd = 'pod5 convert fast5 '+fast5_input+'/*.fast5 '+ '-o '+pod5_output
     os.system(cmd)

@@ -38,7 +38,7 @@ xna_bases = np.concatenate(list(list(i) for i in xna_base_pairs))
 ######################XFASTA GENERATION######################
 
 #Fasta2x - write sequences to xfasta even if they do no contain XNAs. Default = False 
-write_no_xna_seq = True
+write_no_xna_seq = False
 
 #Fasta2x - Write gaps in place of XNAs in fasta reference file for null testing
 write_gaps = False
@@ -47,25 +47,33 @@ write_gaps = False
 ##Analysis instructions 
 
 #Re-basecall pod5 file. Required if new reference files are being used. 
-basecall_pod = False
+basecall_pod = True
 
 #Re-generate BAM files for reference-based basecalling.
-regenerate_bam = False
+regenerate_bam = True
 
 #Converting BAM files for data correction 
-bam_convert = False
+bam_convert = True
+
+#Merge fail bam ?
+merge_fail = True
+
+#Filtering bed files by reference sequence - only use if training on mixed data sets
+bed_filtering = True
+mod_alignment = "P_Xemora_Train+XPOS[P:130]"
+can_alignment = "G_Xemora_Train+XPOS[P:130]"
 
 #Data extraction, filtering, and heptamer correction 
-data_fix = False
+data_fix = True
 
 #SAM file sequence corrections 
-sam_corrections = False
+sam_corrections = True
 
 #Convering SAM files for training 
-sam_convert = False
+sam_convert = True
 
 #Re-generate training or basecalling chunks.
-regenerate_chunks = False
+regenerate_chunks = True
 
 #Merge chunks again for training data. 
 remerge_chunks = True
@@ -77,9 +85,11 @@ remerge_chunks = True
 
 #kmer table 
 kmer_table_path = 'models/remora/4mer_9.4.1.csv'
+#kmer_table_path = 'models/remora/9mer_10.4.1.csv'
 
 #ml model (ConvLSTM_w_ref.py or Conv_w_ref.py')
 ml_model_path = 'models/ConvLSTM_w_ref.py'
+
 
 #Modified base in Fasta sequence you wish to train model or use model to basecall
 mod_base = 'Z'
@@ -94,10 +104,10 @@ kmer_context ='4 4'
 chunk_context = '50 50' 
 
 #Proportion of reads to use for validation 
-val_proportion = '0.5'
+val_proportion = '0.2'
 
 #Number of chunks for training (in thousands: e.g.: '200' = 200,000 chunks) 
-chunk_num = '50000'
+chunk_num = '500000'
 
 
 
@@ -114,4 +124,6 @@ device_type = 'cuda:all'
 #Config file 
 guppy_config_file = 'dna_r9.4.1_450bps_hac.cfg'
 #guppy_config_file = 'dna_r10.4.1_e8.2_400bps_hac.cfg'
+#guppy_config_file = 'dna_r10.4.1_e8.2_260bps_hac.cfg'
+#guppy_config_file = 'dna_r10.4.1_e8.2_260bps_sup.cfg'
 

@@ -1,8 +1,8 @@
 name: nanopore-re
 channels:
+  - conda-forge  # Moved to top for preference
   - bioconda
   - anaconda
-  - conda-forge
   - defaults
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
@@ -10,9 +10,8 @@ dependencies:
   - about-time=4.2.1=pyhd8ed1ab_0
   - alive-progress=3.1.4=pyhd8ed1ab_0
   - biopython=1.78=py38h7f8727e_0
-  - blas=1.0=mkl
+  - libblas=*=*openblas  # Replacing MKL blas with openblas
   - htslib=1.17=h81da01d_2
-  - intel-openmp=2021.4.0=h06a4308_3561
   - ld_impl_linux-64=2.40=h41732ed_0
   - libcurl=8.1.1=h251f7ec_2
   - libdeflate=1.18=h0b41bf4_0
@@ -33,6 +32,7 @@ dependencies:
   - openssl=3.1.2=hd590300_0
   - pip=23.2.1=pyhd8ed1ab_0
   - samtools=1.17=hd87286a_1
+  - numpy == 1.21.0
   - python=3.8.17=he550d4f_0_cpython
   - pip:
       - cython==3.0.0
@@ -56,11 +56,10 @@ dependencies:
       - nvidia-nvtx-cu11==11.7.91
       - ont-remora==2.1.3
       - ont-fast5-api==4.1.1
-      - numpy == 1.21.0
       - torch==2.0.1
       - pandas==2.0.3
       - pod5==0.2.4
       - scikit-learn==1.3.0
       - scipy==1.10.1
       - seaborn==0.12.2
-prefix: /home/marchandlab/miniconda3/envs/nanopore-bere
+prefix: /home/marchandlab/miniconda3/envs/nanopore-re
