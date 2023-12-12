@@ -62,10 +62,50 @@ else:
 
 #Step 2: #Basecall pod5 files 
 if basecall_pod ==True: 
-    cmd=os.path.expanduser(basecaller_path)+' -i '+mod_pod_dir+' -s '+mod_fastq_dir+' -c '+guppy_config_file+' -x auto --bam_out --index --moves_out -a '+os.path.join(ref_dir,'x'+os.path.basename(xna_ref_fasta))
+    cmd=os.path.expanduser(basecaller_path)+' -i '+mod_pod_dir+' -s '+mod_fastq_dir+' -c '+guppy_config_file+' -x auto --bam_out --index --moves_out -a '+os.path.join(ref_dir,'x'+os.path.basename(xna_ref_fasta))+' --min_qscore '+str(basecall_min_qscore)
     os.system(cmd)
 else: 
     print('Xemora  [STATUS] - Skipping POD5 basecalling for modified bases.')
+
+
+# Barcoding
+if barcode_basecall == True: 
+    barcode_cmd = (os.path.expanduser(guppy_barcoder_path) + 
+                   ' --input_path ' + os.path.join(mod_fastq_dir, 'pass') + 
+                   ' --save_path ' + os.path.join(mod_dir, 'barcoded') + 
+                   ' --bam_out ' +
+                   #' --config configuration_dual.cfg' + 
+                   ' --barcode_kits SQK-NBD114-96' +
+                   ' --min_score_barcode_front 60 --min_score_barcode_rear 60')
+    os.system(barcode_cmd)
+    
+    #Barcode counting output
+    def parse_barcoding_summary(file_path):
+        # Read the barcoding summary file
+        df = pd.read_csv(file_path, sep='\t')
+
+        # Count the occurrences of each barcode arrangement
+        barcode_counts = df['barcode_arrangement'].value_counts()
+
+        # Convert to DataFrame for easier handling
+        barcode_counts_df = barcode_counts.reset_index()
+        barcode_counts_df.columns = ['Barcode', 'Count']
+
+        return barcode_counts_df
+
+    # Replace this with the path to your barcoding summary file
+    file_path = os.path.join(mod_dir, 'barcoded', 'barcoding_summary.txt')
+
+    # Parse the file and get the counts
+    barcode_counts_df = parse_barcoding_summary(file_path)
+    print(barcode_counts_df)
+    
+    output_file_path = os.path.join(mod_dir, 'barcoded', 'barcoding_counts.csv')
+    barcode_counts_df.to_csv(output_file_path, index=False)
+    
+else:
+    print('Xemora [STATUS] - Skipping Barcoding step.')
+
 
 
 #Step 3: Merge Bam files 
@@ -73,7 +113,39 @@ if os.path.isfile(os.path.join(mod_bam_dir,os.path.basename(mod_bam_dir))+'.bam'
     cmd = 'samtools merge '+os.path.join(mod_bam_dir,os.path.basename(mod_bam_dir))+'.bam'+' '+os.path.join(mod_fastq_dir,'pass/*.bam -f')
     print('Xemora  [STATUS] - Merging modified BAM files.')
     os.system(cmd)
+    
+    print('Xemora [STATUS] - Indexing modified full BAM file') 
+    #cmd_index = 'samtools index ' + mod_bam_dir + '.bam'
+    cmd_index = 'samtools index ' + os.path.join(mod_bam_dir, 'bam') + '.bam'
+    os.system(cmd_index)
+    
+    
+#################################
+#Nanoplot QC
+def run_nanoplot(bam_dir):
+    bam_file = os.path.join(bam_dir, 'bam.bam')
+    if not os.path.isfile(bam_file):
+        print(f'BAM file not found: {bam_file}')
+        return
 
+    nanoplot_qc_dir = os.path.join(bam_dir, 'NanoPlot_QC')
+    if not os.path.exists(nanoplot_qc_dir):
+        os.makedirs(nanoplot_qc_dir)
+
+    cmd = f'NanoPlot --bam {bam_file} --maxlength 500 -o {nanoplot_qc_dir}'
+    result = os.system(cmd)
+    if result != 0:
+        print(f'Error occurred while running NanoPlot for {bam_file}')
+
+if NanoPlot_Basecall == True:
+    print('Xemora [STATUS] - Running NanoPlot QC')
+    run_nanoplot(mod_bam_dir)  # mod_bam_path should be the directory containing 'all.bam'
+
+
+
+
+
+#################################
 
 #Step 4: Bed file generation 
 if os.stat(os.path.join(ref_dir,'x'+os.path.basename(xna_ref_fasta))).st_size == 0: 

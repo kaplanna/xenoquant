@@ -17,7 +17,7 @@ import numpy as np
 
 
 #Standard basepairs written in 'purine pyrimidine' order
-standard_base_pairs = ['AT','GC']
+standard_base_pairs = ['AT','GC', 'NN']
 
 #Convert this to set
 standard_bases = np.concatenate(list(list(i) for i in standard_base_pairs))
@@ -49,14 +49,21 @@ write_gaps = False
 #Re-basecall pod5 file. Required if new reference files are being used. 
 basecall_pod = True
 
+#Dual barcode basecall
+barcode_basecall = True
+
+
 #Re-generate BAM files for reference-based basecalling.
 regenerate_bam = True
 
 #Converting BAM files for data correction 
-bam_convert = True
+bam_convert = False
 
 #Merge fail bam ?
-merge_fail = True
+merge_fail = False
+
+#convert bam files to fasta for troubleshooting- NOTE: use xemora-re env
+bam_to_fasta = False
 
 #Filtering bed files by reference sequence - only use if training on mixed data sets
 bed_filtering = True
@@ -77,6 +84,9 @@ regenerate_chunks = True
 
 #Merge chunks again for training data. 
 remerge_chunks = True
+
+#Build model using Remora 
+gen_model = True
 ############################################################
 
 
@@ -84,8 +94,8 @@ remerge_chunks = True
 ##Model Training and Basecalling Parameters
 
 #kmer table 
-kmer_table_path = 'models/remora/4mer_9.4.1.csv'
-#kmer_table_path = 'models/remora/9mer_10.4.1.csv'
+#kmer_table_path = 'models/remora/4mer_9.4.1.csv'
+kmer_table_path = 'models/remora/9mer_10.4.1.csv'
 
 #ml model (ConvLSTM_w_ref.py or Conv_w_ref.py')
 ml_model_path = 'models/ConvLSTM_w_ref.py'
@@ -109,7 +119,10 @@ val_proportion = '0.2'
 #Number of chunks for training (in thousands: e.g.: '200' = 200,000 chunks) 
 chunk_num = '500000'
 
-
+############################################################
+# NanoPlot QC Analysis
+NanoPlot_Training = False
+NanoPlot_Basecall = False
 
 
 ############################################################
@@ -117,13 +130,30 @@ chunk_num = '500000'
 
 #Path to guppy basecaller
 basecaller_path ='~/ont-guppy/bin/guppy_basecaller' 
+guppy_barcoder_path ='~/ont-guppy/bin/guppy_barcoder'
 
 #GPU enabled 
 device_type = 'cuda:all' 
 
+#Guppy q-score threshold for pass/fail 
+training_mod_min_qscore = 7
+training_can_min_qscore = 7
+basecall_min_qscore = 7
+
 #Config file 
-guppy_config_file = 'dna_r9.4.1_450bps_hac.cfg'
-#guppy_config_file = 'dna_r10.4.1_e8.2_400bps_hac.cfg'
+#guppy_config_file = 'dna_r9.4.1_450bps_hac.cfg'
+guppy_config_file = 'dna_r10.4.1_e8.2_400bps_hac.cfg'
 #guppy_config_file = 'dna_r10.4.1_e8.2_260bps_hac.cfg'
 #guppy_config_file = 'dna_r10.4.1_e8.2_260bps_sup.cfg'
+
+#barcoding
+#for dual
+#barcode_config = 'configuration_dual.cfg'
+#barcode_kit = 'EXP-DUAL00'
+
+        
+
+
+
+
 
