@@ -6,9 +6,9 @@ xr_tools.py
 
 Title: Unpublished work
 
-By: H. Kawabe, N. Kaplan, J. A. Marchand
+By: H. Kawabe, N. Kaplan, J. Sumabat, J. A. Marchand
 
-Updated: 3/2/23
+Updated: 11/28/23
 """
 ########################################################################
 ########################################################################
@@ -16,6 +16,7 @@ Updated: 3/2/23
 import pandas as pd
 import os
 import glob
+import pysam
 from pathlib import Path
 
 def fetch_xna_pos(xm_header):
@@ -65,8 +66,6 @@ def check_xfasta_format(xfasta_file,standard_bases):
 
         return False 
 
-
-
 #Scans directory and subdirectory to get proper fast5 file path. Not explicitly handled with pod5 commands
 def get_fast5_subdir(fast5_dir): 
     path = os.path.normpath(os.path.expanduser(fast5_dir))
@@ -83,6 +82,20 @@ def get_fast5_subdir(fast5_dir):
         print('Xemora [ERROR] - Could not find Fast5 directory. Check path')
         return False
 
+def get_pod5_subdir(pod5_dir): 
+    path = os.path.normpath(os.path.expanduser(pod5_dir))
+    if os.path.exists(path):
+        pod5_files = list(Path(path).rglob("*.pod5" ))
+        if len(pod5_files)>0:
+            pod5_subdir = os.path.dirname(pod5_files[0])
+            print('Xemora [STATUS] - Found '+str(len(pod5_files))+' POD5 files in '+pod5_dir)
+            return pod5_subdir
+        else: 
+            print('Xemora [ERROR] - Could not find POD5 files in specified directory. Check .pod5 exist.')
+            return False
+    else: 
+        print('Xemora [ERROR] - Could not find POD5 directory. Check path')
+        return False
 
 #Check if working directory exists, if not create it. 
 def check_make_dir(directory):
@@ -92,8 +105,25 @@ def check_make_dir(directory):
         print('Xemora [STATUS] - Required directory not found. Creating directory: '+directory)
     return directory
 
-
 #Fast5 to pod5 conversion
 def cod5_to_fast5(fast5_input, pod5_output):
-    cmd = 'pod5 convert fast5 '+fast5_input+'/*.fast5 '+ '-o '+pod5_output
+    cmd = 'pod5 convert fast5 '+fast5_input+'/*.fast5 -o '+pod5_output
     os.system(cmd)
+
+#Merge pod5 files
+def pod5_merge(pod5_input, merged_pod5):
+    cmd = 'pod5 merge '+ pod5_input+'/*.pod5 -o ' + merged_pod5
+    os.system(cmd)
+
+#BAM file primary read filter 
+def filter_primary_alignments(input_bam, output_bam):
+    cmd = 'samtools index ' + input_bam #creates index file for BAM
+    os.system(cmd)
+    with pysam.AlignmentFile(input_bam, "rb") as infile, \
+         pysam.AlignmentFile(output_bam, "wb", header=infile.header) as outfile:
+
+        for read in infile:
+            if not read.is_secondary and not read.is_supplementary and not read.is_unmapped:
+                outfile.write(read)
+
+    print(f"Filtered BAM file saved to {output_bam}")

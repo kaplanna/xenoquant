@@ -29,7 +29,7 @@ can_base = xr_params.can_base
 
 #If you are testing a model where TP/TN/FP/FN is relevant. 
 #P / G / A MUST BE THE FIRST LETTERS IN REF FASTA ALIGNMENT NAMES
-plot_confusion_matrix = True
+plot_confusion_matrix = False
 plot_roc_curve = True
 
 
@@ -205,29 +205,35 @@ if plot_confusion_matrix:
     except Exception as e:
         print(f"An error occurred: {e}")
 
-if plot_roc_curve == True:
+if plot_roc_curve == True: #you need to specify ground truth alignments
 
 
     # Initialize lists to aggregate true class labels and predicted probabilities
     y_true_agg = []
     y_prob_agg = []
 
-    # ... (previous code for reading data and creating alignment-specific CSVs remains unchanged)
 
     # Iterate through each alignment file to aggregate the data for ROC curve
     for alignments_file_name in alignment_files_list:
         output_file_path = os.path.join(results_dir, alignments_file_name)
         df_other = pd.read_csv(output_file_path)
 
-        # Set the true class based on the alignment
-        alignment = alignments_file_name.split('_')[2].split('.')[0]  # Extracting alignment name from file name
-        if alignment == xna_type:
-            true_class = 1
-        elif alignment == dna_type:
-            true_class = 0
+        # Set the true class based on the specific alignment names
+        # Specify particular alignments for ROC curve
+        dna_alignment = "B5.C.AT+XPOS[B:75]"
+        xna_alignment = "B1.C.BS+XPOS[B:79]"
+
+        # Use the full name from the alignments file without splitting
+        alignment = alignments_file_name.replace('alignment_results_', '').replace('.csv', '')
+
+        if alignment == xna_alignment:
+            true_class = 1  # XNA
+        elif alignment == dna_alignment:
+            true_class = 0  # DNA
         else:
-            print(f"Unknown alignment: {alignment}")
-            continue
+            print(f"Skipping unknown or unspecified alignment: {alignment}")
+            continue  # Skip this alignment if it doesn't match the specified ones
+
 
         # Append the true class labels and predicted probabilities
         y_true_agg.extend([true_class] * len(df_other))

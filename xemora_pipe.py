@@ -24,45 +24,30 @@ from lib.xr_params import *
 
 ############################################################
 #Training paths
-'''
-working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/231205_train_230723_Old_PZ/ZC_Train_Q9_w_Fail'
-xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/fast5/10.4.1/230712_PZ_Xmra_Train_10_4_1/50fast5'
-xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/fast5/10.4.1/230712_PZ_Xmra_Train_10_4_1/20230712_1805_MN37138_AOX743_3c1cdb19/reference/P_xr_train_full_adapters.fa'
-dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/fast5/10.4.1/230712_GC_Xmra_Train_10_4_1/50fast5'
-dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/fast5/10.4.1/230712_GC_Xmra_Train_10_4_1/reference/GC_xem_adapters.fa'
-'''
 
-#working_dir = '/home/marchandlab/DataAnalysis/Kawabe/231210_BSn_IDT/xemora/isoGmod_isoCcan'
-#xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kawabe/231210_BSn_IDT/20231207_1121_MN41475_AQQ090_fa649842/small_fast5'
-#xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kawabe/231210_BSn_IDT/reference/isoG.fasta'
-
-#dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kawabe/231210_BSn_IDT/20231207_1121_MN41475_AQQ090_fa649842/small_fast5'
-#dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kawabe/231210_BSn_IDT/reference/isoC.fasta'
-
-working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/231211_GAP_Train/ZC_Train'
-xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/fast5/10.4.1/230928_GAP_Train/GAP_Train_fast5_0-49'
-xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/fast5/10.4.1/230928_GAP_Train/reference/GAP_allseq_wadapt.fa'
-dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/fast5/10.4.1/230928_GAP_Train/GAP_Train_fast5_0-49'
-dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/fast5/10.4.1/230928_GAP_Train/reference/GAP_allseq_wadapt.fa'
+working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/PZn/240216_PZ_Training/PG-Train_Q7'
+xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/pod5/240215_PZ_NB25_xr_Train/20240215_1810_MN37138_ARS988_4bbd5246/pod5_0-72'
+xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/pod5/240215_PZ_NB25_xr_Train/reference/PZ_NB25_xr_Train.fasta'
+dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/pod5/240216_GC_71merPCR_xr_Train/20240216_1817_MN41475_ASE526_f9fc38c7/100_pod5'
+dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/pod5/240216_GC_71merPCR_xr_Train/reference/GC_71mer_xr_Train.fasta'
 
 ############################################################
 #Basecall paths
 
-bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/231207_barcoding_testing_GAP/ZC_Basecall'
-bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/fast5/10.4.1/230928_GAP_Train/GAP_basecall_92fast5'
-bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/fast5/10.4.1/230928_GAP_Train/reference/GAP_allseq_wadapt.fa'
-#bc_model_file = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/230928_GAP_Train/ZC_Train/model/model_best.pt'
-bc_model_file = working_dir+'/model/model_best.pt'
+bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240311_B5R_Basecall/ST-Basecall_Q7'
+bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/pod5/240311_B5R_Theo_40/20240311_1758_MN37138_ASF796_f5dea77c/pod5'
+bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/pod5/240311_B5R_Theo_40/reference/240308_B5_Taq_Theo.fasta'
+bc_model_file = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/240110_BSn_xr_train/ST_Train_Q7/model/model_best.pt'
+#bc_model_file = working_dir+'/model/model_best.pt'
 
 
 ############################################################
 
 ############################################################
-train_model = True
-basecall_reads = False
-output_basecall_results = False
+train_model = False
+basecall_reads = True
+output_basecall_results = True
 ############################################################
-
 #conda activate xemora-re
 
 

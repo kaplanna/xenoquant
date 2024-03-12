@@ -25,8 +25,8 @@ standard_bases = np.concatenate(list(list(i) for i in standard_base_pairs))
 #Alternative basepairs written in 'purine pyrimidine' order
 xna_base_pairs = ['BS','PZ','JV','XK']
 
-#Specify canonical base substitution desired for xFASTA generation here
-confounding_pairs =  ['BA','SA','PG','ZC','JC','VG','XA','KG'] 
+#Specify canonical base substitution desired for xFASTA generation here #changed to ST by NK
+confounding_pairs =  ['BA','ST','PG','ZC','JC','VG','XA','KG'] 
 
 #If XNAs are given different standard base substitutions, set them up as seperate (e.g, ['P','Z'])
 xna_segmentation_model_sets = ['B','S','PZ','JV','X', 'K', 'QW','ER']
@@ -50,7 +50,7 @@ write_gaps = False
 basecall_pod = True
 
 #Dual barcode basecall
-barcode_basecall = True
+barcode_basecall = False
 
 
 #Re-generate BAM files for reference-based basecalling.
@@ -66,7 +66,7 @@ merge_fail = False
 bam_to_fasta = False
 
 #Filtering bed files by reference sequence - only use if training on mixed data sets
-bed_filtering = True
+bed_filtering = False
 mod_alignment = "P_Xemora_Train+XPOS[P:130]"
 can_alignment = "G_Xemora_Train+XPOS[P:130]"
 
@@ -102,10 +102,10 @@ ml_model_path = 'models/ConvLSTM_w_ref.py'
 
 
 #Modified base in Fasta sequence you wish to train model or use model to basecall
-mod_base = 'Z'
+mod_base = 'S'
 
 #Most similar substituted canonical base you will be comparing against 
-can_base = 'C'
+can_base = 'T'
 
 #Extent of Kmer content (-,+) to store for model training
 kmer_context ='4 4' 
@@ -122,7 +122,7 @@ chunk_num = '500000'
 ############################################################
 # NanoPlot QC Analysis
 NanoPlot_Training = False
-NanoPlot_Basecall = False
+NanoPlot_Basecall = True
 
 
 ############################################################
@@ -131,6 +131,7 @@ NanoPlot_Basecall = False
 #Path to guppy basecaller
 basecaller_path ='~/ont-guppy/bin/guppy_basecaller' 
 guppy_barcoder_path ='~/ont-guppy/bin/guppy_barcoder'
+guppy_aligner_path = '~/ont-guppy/bin/guppy_aligner' 
 
 #GPU enabled 
 device_type = 'cuda:all' 
@@ -151,8 +152,7 @@ guppy_config_file = 'dna_r10.4.1_e8.2_400bps_hac.cfg'
 #barcode_config = 'configuration_dual.cfg'
 #barcode_kit = 'EXP-DUAL00'
 
-        
-
+       
 
 
 
