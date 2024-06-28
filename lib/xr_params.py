@@ -66,9 +66,9 @@ merge_fail = False
 bam_to_fasta = False
 
 #Filtering bed files by reference sequence - only use if training on mixed data sets
-bed_filtering = False
-mod_alignment = "P_Xemora_Train+XPOS[P:130]"
-can_alignment = "G_Xemora_Train+XPOS[P:130]"
+bed_filtering = True
+mod_alignment = "CSC_Extended+XPOS[B:105]"
+can_alignment = "CTC_2F_8R+XPOS[B:75]"
 
 #Data extraction, filtering, and heptamer correction 
 data_fix = True
@@ -102,10 +102,10 @@ ml_model_path = 'models/ConvLSTM_w_ref.py'
 
 
 #Modified base in Fasta sequence you wish to train model or use model to basecall
-mod_base = 'S'
+mod_base = 'B'
 
 #Most similar substituted canonical base you will be comparing against 
-can_base = 'T'
+can_base = 'A'
 
 #Extent of Kmer content (-,+) to store for model training
 kmer_context ='4 4' 

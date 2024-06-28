@@ -1,4 +1,4 @@
-name: nanopore-re
+name: xemora-re
 channels:
   - conda-forge  # Moved to top for preference
   - bioconda
@@ -62,5 +62,5 @@ dependencies:
       - scikit-learn==1.3.0
       - scipy==1.10.1
       - seaborn==0.12.2
-        NanoPlot==1.42.0
+      - NanoPlot==1.42.0
 prefix: /home/marchandlab/miniconda3/envs/nanopore-re

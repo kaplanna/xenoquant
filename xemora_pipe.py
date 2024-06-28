@@ -25,28 +25,28 @@ from lib.xr_params import *
 ############################################################
 #Training paths
 
-working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/PZn/240216_PZ_Training/PG-Train_Q7'
-xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/pod5/240215_PZ_NB25_xr_Train/20240215_1810_MN37138_ARS988_4bbd5246/pod5_0-72'
-xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/pod5/240215_PZ_NB25_xr_Train/reference/PZ_NB25_xr_Train.fasta'
-dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/pod5/240216_GC_71merPCR_xr_Train/20240216_1817_MN41475_ASE526_f9fc38c7/100_pod5'
-dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/pod5/240216_GC_71merPCR_xr_Train/reference/GC_71mer_xr_Train.fasta'
-
+working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/240627_CSC_Extended_Training/BA-Train_Q7'
+xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/500_pod5'
+xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/reference/CSC_Extended.fasta'
+dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/20240627_1621_MN37138_AUD804_5ac1717b/pod5'
+dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/reference/NTC_Phusion_Ref.fasta'
 ############################################################
 #Basecall paths
 
-bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240311_B5R_Basecall/ST-Basecall_Q7'
-bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/pod5/240311_B5R_Theo_40/20240311_1758_MN37138_ASF796_f5dea77c/pod5'
-bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/pod5/240311_B5R_Theo_40/reference/240308_B5_Taq_Theo.fasta'
-bc_model_file = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/240110_BSn_xr_train/ST_Train_Q7/model/model_best.pt'
+bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240615_CSC_Extend_Model_Test/BA_Mod_Basecall_Nanoplot'
+bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/pod5_501-599'
+#bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240614_CTC_xr_Train_Extend/20240614_1434_MN41475_ATZ227_e0d0bc24/9_pod5_bc'
+bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/reference/CSC_Extended.fasta'
+bc_model_file = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/240615_CSC_Extend_Training/ST-Train_Q7/model/model_best.pt'
 #bc_model_file = working_dir+'/model/model_best.pt'
 
 
 ############################################################
 
 ############################################################
-train_model = False
-basecall_reads = True
-output_basecall_results = True
+train_model = True
+basecall_reads = False
+output_basecall_results = False
 ############################################################
 #conda activate xemora-re
 
