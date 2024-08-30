@@ -66,9 +66,9 @@ merge_fail = False
 bam_to_fasta = False
 
 #Filtering bed files by reference sequence - only use if training on mixed data sets
-bed_filtering = True
-mod_alignment = "CSC_Extended+XPOS[B:105]"
-can_alignment = "CTC_2F_8R+XPOS[B:75]"
+bed_filtering = False
+mod_alignment = "TSC_Extended+XPOS[B:105]"
+can_alignment = "TTC_4F_9R+XPOS[B:75]"
 
 #Data extraction, filtering, and heptamer correction 
 data_fix = True
@@ -83,7 +83,7 @@ sam_convert = True
 regenerate_chunks = True
 
 #Merge chunks again for training data. 
-remerge_chunks = True
+remerge_chunks = False
 
 #Build model using Remora 
 gen_model = True
@@ -122,7 +122,7 @@ chunk_num = '500000'
 ############################################################
 # NanoPlot QC Analysis
 NanoPlot_Training = False
-NanoPlot_Basecall = True
+NanoPlot_Basecall = False
 
 
 ############################################################

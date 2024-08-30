@@ -25,28 +25,27 @@ from lib.xr_params import *
 ############################################################
 #Training paths
 
-working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/240627_CSC_Extended_Training/BA-Train_Q7'
-xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/500_pod5'
-xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/reference/CSC_Extended.fasta'
-dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/20240627_1621_MN37138_AUD804_5ac1717b/pod5'
+working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/240627_TSC_Extension_rerun/ST-Train_Q7_val_prop_test_JS'
+xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240701_TSC_Extension_xr_Train_rerun/20240701_1546_MN37138_AUD665_f194304a/300_pod5'
+xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240627_TSC_Extension_xr_Train/reference/TSC_Extension_Ref.fasta'
+dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/20240627_1621_MN37138_AUD804_5ac1717b/800_pod5'
 dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/reference/NTC_Phusion_Ref.fasta'
 ############################################################
 #Basecall paths
 
-bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240615_CSC_Extend_Model_Test/BA_Mod_Basecall_Nanoplot'
-bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/pod5_501-599'
-#bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240614_CTC_xr_Train_Extend/20240614_1434_MN41475_ATZ227_e0d0bc24/9_pod5_bc'
-bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/reference/CSC_Extended.fasta'
-bc_model_file = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/240615_CSC_Extend_Training/ST-Train_Q7/model/model_best.pt'
+bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240819_B13_Full/BA-Basecall'
+bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240816_B13_pH_Rerun_2/20240816_1605_MN41475_AUB839_d3996fad/pod5'
+bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240816_B13_pH_Rerun_2/reference/B13.fasta'
+bc_model_file = '/home/marchandlab/DataAnalysis/Kaplan/training/240312_BS_Models_Xenoffice/BA_Train_Q7/model/model_best.pt'
 #bc_model_file = working_dir+'/model/model_best.pt'
 
 
 ############################################################
 
 ############################################################
-train_model = True
-basecall_reads = False
-output_basecall_results = False
+train_model = False
+basecall_reads = True
+output_basecall_results = True
 ############################################################
 #conda activate xemora-re
 

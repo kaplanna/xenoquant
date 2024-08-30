@@ -220,7 +220,7 @@ if plot_roc_curve == True: #you need to specify ground truth alignments
 
         # Set the true class based on the specific alignment names
         # Specify particular alignments for ROC curve
-        dna_alignment = "B9.C.AT+XPOS[B:75]"
+        dna_alignment = "B10.C.AT+XPOS[B:75]"
         xna_alignment = "B7.C.BS+XPOS[B:79]"
         print(f"DNA Alignment for ROC: {dna_alignment}")
         print(f"XNA Alignment for ROC: {xna_alignment}")
