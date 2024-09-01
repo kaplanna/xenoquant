@@ -33,7 +33,7 @@ dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr
 ############################################################
 #Basecall paths
 
-bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240819_B13_Full/BA-Basecall'
+bc_working_dir = '/Users/nickkaplan/xenobiocode/DataAnalysis/basecall/240830_B16_B17_Basecall/BA-Basecall'
 bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240816_B13_pH_Rerun_2/20240816_1605_MN41475_AUB839_d3996fad/pod5'
 bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240816_B13_pH_Rerun_2/reference/B13.fasta'
 bc_model_file = '/home/marchandlab/DataAnalysis/Kaplan/training/240312_BS_Models_Xenoffice/BA_Train_Q7/model/model_best.pt'
@@ -44,8 +44,9 @@ bc_model_file = '/home/marchandlab/DataAnalysis/Kaplan/training/240312_BS_Models
 
 ############################################################
 train_model = False
-basecall_reads = True
+basecall_reads = False
 output_basecall_results = True
+cutadapt_demux = True
 ############################################################
 #conda activate xemora-re
 
@@ -69,3 +70,9 @@ if output_basecall_results==True:
     cmd = f'python {script_path} {bc_working_dir}'
     os.system(cmd)
     
+
+#demux
+if cutadapt_demux==True: 
+    demux_path = './demux/xr_demux_cutadapt.py'
+    cmd = f'python {demux_path} {bc_working_dir}'
+    os.system(cmd)    

@@ -84,26 +84,24 @@ df_sequencing_summary.to_csv(os.path.join(base_path, 'sequencing_summary.csv'), 
 df_modifications = pd.read_csv(per_read_modifications_file, delimiter='\t', header=None, dtype={1: 'str', 2: 'str', 3: 'str'})
 df_modifications.columns = ['read_id', 'read_focus_base', 'label', 'class_pred', 'class_probs']
 
-# Initialize results dataframe and alignments file names list
+# Initialize results dataframe and full alignment results file path
 results = []
 alignment_files_list = []
+full_alignment_results_path = os.path.join(results_dir, 'full_alignment_results.csv')
+
+# If the full alignment results file already exists, remove it to start fresh
+if os.path.exists(full_alignment_results_path):
+    os.remove(full_alignment_results_path)
 
 # Iterate through each row in the .bed file DataFrame
 for index, row in df_bed.iterrows():
     sequence_name = row['Name']
     alignment = row['Alignment']
     alignments_file_name = f'alignment_results_{alignment}.csv'
-    # Store the alignments_file_name to the list for later use in plotting ROC curves
     alignment_files_list.append(alignments_file_name)
 
-    
     # Filter rows that match the specific alignment
     filtered_rows = df_sequencing_summary[df_sequencing_summary['alignment_genome'] == alignment]
-    
-    # Create DataFrame for alignment results if it doesn't already exist
-    if not os.path.isfile(alignments_file_name):
-        df_alignments = pd.DataFrame(columns=['read_id', 'class_pred', 'class_0_probs', 'class_1_probs'])
-
     
     # Merge based on read_id
     merged_df = pd.merge(filtered_rows, df_modifications, on='read_id')
@@ -116,18 +114,20 @@ for index, row in df_bed.iterrows():
     output_df = merged_df[['read_id', 'class_pred', 'class_0_probs', 'class_1_probs']].drop_duplicates(subset='read_id')
     output_df['class_pred'] = output_df['class_pred'].astype(int)
     
-    # Save the filtered and processed data to a CSV file
+    # Append this DataFrame to the full alignment results CSV file
+    output_df.to_csv(full_alignment_results_path, mode='a', header=not os.path.exists(full_alignment_results_path), index=False)
+
+    # Save the filtered and processed data to individual CSV files (optional)
     output_file_path = os.path.join(results_dir, alignments_file_name)
     output_df.to_csv(output_file_path, index=False)
-    
+
     # Calculate the number of class predictions (1s and 0s)
     number_of_1s = output_df['class_pred'].sum()
     number_of_0s = len(output_df) - number_of_1s
-    # Calculate the percentages of 1s and 0s
     percentage_1 = round((number_of_1s / len(output_df)) * 100, 2)
     percentage_0 = round((number_of_0s / len(output_df)) * 100, 2)
-    
-    # Append calculated data to the results list as a dictionary
+
+    # Append calculated data to the results list
     results.append({
         'Sequence': alignment,
         'Total Alignments': len(output_df),
@@ -136,11 +136,14 @@ for index, row in df_bed.iterrows():
         'Percentage 1': percentage_1,
         'Percentage 0': percentage_0
     })
-# Uncomment to debug and print the 'results' list
-# print(results)
 
-# Convert the results list (of dictionaries) to a Pandas DataFrame for easier manipulation and output
+# Save the overall results to a CSV file
 results_df = pd.DataFrame(results)
+final_results_path = os.path.join(results_dir, 'overall_results.csv')
+results_df.to_csv(final_results_path, index=False)
+
+print(f"Full alignment results saved to {full_alignment_results_path}")
+
 
 # Save the overall results to a CSV file
 print("Xemora [STATUS] - Writing Overall Results File")

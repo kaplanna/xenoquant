@@ -63,4 +63,4 @@ dependencies:
       - scipy==1.10.1
       - seaborn==0.12.2
       - NanoPlot==1.42.0
-prefix: /home/marchandlab/miniconda3/envs/nanopore-re
+prefix: /opt/anaconda3/envs/xemora-re
