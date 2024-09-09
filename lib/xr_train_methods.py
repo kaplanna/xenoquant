@@ -35,10 +35,13 @@ xna_ref_fasta = os.path.expanduser(sys.argv[3])
 dna_raw_dir = os.path.expanduser(sys.argv[4])
 dna_ref_fasta = os.path.expanduser(sys.argv[5])
 
+
+
 # Create necessary directories if they don't exist
 working_dir = check_make_dir(working_dir)
 ref_dir = check_make_dir(os.path.join(working_dir,'references'))
 chunk_dir = check_make_dir(os.path.join(working_dir,'chunks'))
+model_dir = check_make_dir(os.path.join(working_dir, 'model'))
 mod_dir = check_make_dir(os.path.join(working_dir,'modified_preprocess'))
 mod_pod_dir = check_make_dir(os.path.join(mod_dir,'pod5'))
 mod_bam_dir = check_make_dir(os.path.join(mod_dir,'bam'))
@@ -141,7 +144,7 @@ def pod5_merge(pod5_input, pod_dir, overwrite_pod):
         print('Xemora [STATUS]- Skipping POD5 merge')
     return merged_pod5
     
-def dorado_basecall(dorado_path, dorado_model, xfasta_path, min_qscore, pod_dir, bam_directory, basecall_pod):
+def dorado_basecall(dorado_path, dorado_model, min_qscore, pod_dir, bam_directory, basecall_pod):
     """
     Runs the Dorado basecaller to generate a BAM file from POD5 files.
 
@@ -160,12 +163,31 @@ def dorado_basecall(dorado_path, dorado_model, xfasta_path, min_qscore, pod_dir,
     output_bam = os.path.join(bam_directory, 'bc.bam')
     
     if basecall_pod or not os.path.exists(output_bam):
-        cmd = '{} basecaller {} --reference {} --no-trim --emit-moves --min-qscore {} {} > {}'.format(dorado_path, dorado_model, xfasta_path, min_qscore, pod_dir, output_bam)
+        cmd = '{} basecaller {} --no-trim --emit-moves --min-qscore {} {} > {}'.format(dorado_path, dorado_model, min_qscore, pod_dir, output_bam)
         os.system(cmd) 
         return output_bam
     else:
         print('Xemora [STATUS] - Skipping POD5 basecalling for modified bases.')
         return output_bam
+
+def minimap2_aligner(input_bam, xfasta_path, bam_directory):
+    """
+    minimap2_aligner takes in a bam file from Dorado basecaller and outputs a new 
+    aligned bam file using an xFASTA formatted file 
+
+    Parameters:
+    input_bam - file path to bam file to align
+    xfasta_path - file pathway to xFASTA file to align basecalls to 
+    bam_directory - output file pathway for aligned BAM file 
+
+    Returns: 
+    aligned_bam - minimap2 aligned bam file 
+    """
+    aligned_bam = os.path.join(bam_directory, 'aligned.BAM')
+    cmd = 'samtools fastq -T "*" '+input_bam+ ' | minimap2 -y -ax map-ont --score-N 0 --secondary no --sam-hit-only --MD '+xfasta_path+ ' - | samtools view -F0x800 -bho ' +aligned_bam
+    os.system(cmd)
+    
+    return aligned_bam
 
 # Step 4: Bed file generation 
 def bed_gen(input_fasta, xna_base, sub_base, chunk_range, chunk_shift): 
@@ -225,7 +247,7 @@ def generate_mod_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_
     Returns: 
     str: File path to the generated Remora chunk file.
     """
-    chunk_file = os.path.join(chunk_dir, 'modified_chunks.npz')
+    chunk_file = os.path.join(chunk_dir, 'mod_chunks.npz')
     if regenerate_chunks:
         print('Xemora  [STATUS] - Generating chunks for modified basecalling.')
         cmd = 'remora \
@@ -239,7 +261,7 @@ def generate_mod_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_
           --max-chunks-per-read '+str(2*mod_chunk_range+1)+' \
           --refine-kmer-level-table '+kmer_table_path+' \
           --refine-rough-rescale '+' \
-          --motif N 0 \
+          --motif '+can_base+' 0 \
           --chunk-context '+chunk_context
         os.system(cmd)
         return chunk_file
@@ -263,7 +285,7 @@ def generate_can_chunks(pod_file, bam_file, chunk_dir, bed_file, can_base, kmer_
     Returns: 
     str: File path to the generated Remora chunk file.
     """
-    chunk_file = os.path.join(chunk_dir, 'canonical_chunks.npz')
+    chunk_file = os.path.join(chunk_dir, 'can_chunks.npz')
     if regenerate_chunks:
         print('Xemora [STATUS] - Generating chunks for canonical basecalling.') 
         cmd = 'remora \
@@ -271,7 +293,7 @@ def generate_can_chunks(pod_file, bam_file, chunk_dir, bed_file, can_base, kmer_
             '+pod_file+' \
             '+bam_file+' \
             --output-remora-training-file '+chunk_file+' \
-            --focus_reference-positions '+bed_file+' \
+            --focus-reference-positions '+bed_file+' \
             --max-chunks-per-read '+str(2*mod_chunk_range+1)+' \
             --mod-base-control \
             --motif '+can_base+' 0 \
@@ -337,7 +359,7 @@ def xemora_training(model_dir, training_chunks):
         print('Xemora [STATUS] - Training model.')
         cmd = 'remora \
           model train \
-          '+training_chunks+' \
+          '+os.path.join(chunk_dir,'training_chunks.npz')+' \
           --model '+ml_model_path+' \
           --device 0 \
           --output-path '+model_dir+' \
@@ -345,16 +367,18 @@ def xemora_training(model_dir, training_chunks):
           --kmer-context-bases '+kmer_context+' \
           --chunk-context '+chunk_context+' \
           --val-prop '+val_proportion+' \
-          --batch-size 100 '# + '\
+          --batch-size 100 '# + '
+
+        os.system(cmd)
     else: 
         print('Xemora [STATUS] - Skipping model training')
 
     model_path =os.path.join(model_dir, 'model_best.pt')
-    renamed_model_path = os.path.join(model_dir, mod_base+can_base+'_model.pt')
-    os.rename(model_path, renamed_model_path)
+    #renamed_model_path = os.path.join(model_dir, mod_base+can_base+'_model.pt')
+    #os.rename(model_path, renamed_model_path)
     val_log_path = os.path.join(model_dir, 'validation.log')
 
-    return renamed_model_path, val_log_path
+    return model_path, val_log_path
 
 def gen_confmat(val_log_path, output_dir):
     """
@@ -404,16 +428,21 @@ def main():
         sys.exit()
 
     # Step 2: Perform basecalling using Dorado
-    mod_bc_bam = dorado_basecall(dorado_path, dorado_model, mod_xfasta, min_qscore, mod_merged_pod5, mod_bam_dir, basecall_pod) # Modified dataset
-    can_bc_bam = dorado_basecall(dorado_path, dorado_model, can_xfasta, min_qscore, can_merged_pod5, can_bam_dir, basecall_pod)
+    mod_bc_bam = dorado_basecall(os.path.expanduser(dorado_path), dorado_model, min_qscore, mod_merged_pod5, mod_bam_dir, basecall_pod) # Modified dataset
+    can_bc_bam = dorado_basecall(os.path.expanduser(dorado_path), dorado_model, min_qscore, can_merged_pod5, can_bam_dir, basecall_pod)
+
+    # Step 2.5: Align with minimap2 
+    mod_aligned_bam = minimap2_aligner(mod_bc_bam, mod_xfasta, mod_bam_dir)
+    can_aligned_bam = minimap2_aligner(can_bc_bam, can_xfasta, can_bam_dir)
 
     # Step 3: Generate BED file for region to analyze 
     mod_bed_file = bed_gen(mod_xfasta, mod_base, mod_base, mod_chunk_range, mod_chunk_shift)
     can_bed_file = bed_gen(can_xfasta, mod_base, can_base, can_chunk_range, can_chunk_shift) # Can shift and range variables don't exist yet, ask Jorge if useful for single-context training 
 
     # Step 4: Generate Remora chunks
-    mod_chunk_path = generate_mod_chunks(mod_merged_pod5, mod_bc_bam, chunk_dir, mod_bed_file, mod_base, kmer_context, kmer_table_path, regenerate_chunks)
-    can_chunk_path = generate_can_chunks(can_merged_pod5, can_bc_bam, chunk_dir, can_bed_file, can_base, kmer_context, kmer_table_path, regenerate_chunks)
+    mod_chunk_path = generate_mod_chunks(mod_merged_pod5, mod_aligned_bam, chunk_dir, mod_bed_file, mod_base, kmer_context, kmer_table_path, regenerate_chunks)
+    can_chunk_path = generate_can_chunks(can_merged_pod5, can_aligned_bam, chunk_dir, can_bed_file, can_base, kmer_context, kmer_table_path, regenerate_chunks)
+
 
     # Step 5: Merge chunk files
     training_chunk_path = merge_chunks(chunk_dir, mod_chunk_path, can_chunk_path, balance_chunks)
@@ -422,7 +451,10 @@ def main():
     model_path, validation_log_path = xemora_training(model_dir, training_chunk_path)
 
     # Step 7 (Optional): Generate Confusion Matrices from validation.log
-    if generate_confusion_matrices:
-        confmat_dir = check_make_dir(os.path.join(working_dir, 'confusion_matrices'))
-        gen_confmat(validation_log_path, confmat_dir)
+    #if generate_confusion_matrices:
+        #confmat_dir = check_make_dir(os.path.join(working_dir, 'confusion_matrices'))
+        #gen_confmat(validation_log_path, confmat_dir)
+
+if __name__ == "__main__":
+    main()
 

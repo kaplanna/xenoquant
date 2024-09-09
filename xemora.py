@@ -90,7 +90,7 @@ if args.subparsers == 'train':
 
 
     if exit_flag == False: 
-        cmd = 'python lib/xr_train.py '+args.w+' '+args.f[0]+' '+args.r[0]+' '+args.f[1]+' '+args.r[1]
+        cmd = 'python lib/xr_train_methods.py '+args.w+' '+args.f[0]+' '+args.r[0]+' '+args.f[1]+' '+args.r[1]
         os.system(cmd)
     else: 
         print('Xemora [ERROR] - At least one file path not properly set. Xemora exiting.')

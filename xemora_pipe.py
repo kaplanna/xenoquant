@@ -25,11 +25,11 @@ from lib.xr_params import *
 ############################################################
 #Training paths
 
-working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/240627_TSC_Extension_rerun/ST-Train_Q7_val_prop_test_JS'
-xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240701_TSC_Extension_xr_Train_rerun/20240701_1546_MN37138_AUD665_f194304a/300_pod5'
-xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240627_TSC_Extension_xr_Train/reference/TSC_Extension_Ref.fasta'
-dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/20240627_1621_MN37138_AUD804_5ac1717b/800_pod5'
-dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/reference/NTC_Phusion_Ref.fasta'
+working_dir = '/home/xenolab/DataAnalysis/Kaplan/training/10.4.1/BSn/240903_GBC_Dorado_Train/ST-Train'
+xna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240104_BSn_90mer_xr_train/20240104_1448_MN37138_ARV509_33c529d5/5_fast5'
+xna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240104_BSn_90mer_xr_train/BS_90mer.fasta'
+dna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240108_AT_90mer_xr_train_rerun/20240109_1426_MN37138_ARQ402_4df45cc7/5_fast5'
+dna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240104_BSn_90mer_xr_train/BS_90mer.fasta'
 ############################################################
 #Basecall paths
 
@@ -43,10 +43,10 @@ bc_model_file = '/home/marchandlab/DataAnalysis/Kaplan/training/240312_BS_Models
 ############################################################
 
 ############################################################
-train_model = False
+train_model = True
 basecall_reads = False
-output_basecall_results = True
-cutadapt_demux = True
+output_basecall_results = False
+cutadapt_demux = False
 ############################################################
 #conda activate xemora-re
 

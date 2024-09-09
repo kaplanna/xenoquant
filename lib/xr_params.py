@@ -83,7 +83,7 @@ sam_convert = True
 regenerate_chunks = True
 
 #Merge chunks again for training data. 
-remerge_chunks = False
+remerge_chunks = True
 
 #Build model using Remora 
 gen_model = True
@@ -102,10 +102,10 @@ ml_model_path = 'models/ConvLSTM_w_ref.py'
 
 
 #Modified base in Fasta sequence you wish to train model or use model to basecall
-mod_base = 'B'
+mod_base = 'S'
 
 #Most similar substituted canonical base you will be comparing against 
-can_base = 'A'
+can_base = 'T'
 
 #Extent of Kmer content (-,+) to store for model training
 kmer_context ='4 4' 
@@ -118,6 +118,26 @@ val_proportion = '0.2'
 
 #Number of chunks for training (in thousands: e.g.: '200' = 200,000 chunks) 
 chunk_num = '500000'
+
+
+
+
+############################################################
+# New parameters for xr_train_methods.py from Jayson
+overwrite_pod = True
+dorado_path = '~/dorado-0.7.2-linux-x64/bin/dorado'
+dorado_model = '~/dorado-0.7.2-linux-x64/bin/dna_r10.4.1_e8.2_400bps_sup@v5.0.0'
+min_qscore = 7
+#Range of chunk context to use (in bp) for modified base training (default +/- 0) 
+mod_chunk_range = 0
+can_chunk_range = 0
+
+#Shift the mod chunk range position by a fixed amount (default = 0) 
+mod_chunk_shift = 0
+can_chunk_shift = 0
+
+#Balance training chunks. May be set to false for testing, otherwise set to true. 
+balance_chunks = True
 
 ############################################################
 # NanoPlot QC Analysis
