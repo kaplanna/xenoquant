@@ -144,28 +144,45 @@ def pod5_merge(pod5_input, pod_dir, overwrite_pod):
         print('Xemora [STATUS]- Skipping POD5 merge')
     return merged_pod5
     
-def dorado_basecall(dorado_path, dorado_model, min_qscore, pod_dir, bam_directory, basecall_pod):
+def dorado_basecall(dorado_path, dorado_model, min_qscore, pod_dir, bam_directory, basecall_pod, max_reads, filter_readIDs):
     """
-    Runs the Dorado basecaller to generate a BAM file from POD5 files.
-
+    dorado_basecall takes in various inputs needed to run the Dorado basecaller
+    and returns the file path to the generated BAM file 
+    
     Parameters: 
-    dorado_path (str): File path to the Dorado executable.
-    dorado_model (str): Canonical model to use for basecalling.
-    xfasta_path (str): File path to an xFASTA file.
-    min_qscore (int): Minimum read quality score to include in the BAM file.
-    pod_dir (str): Directory containing the POD5 file(s) to be basecalled.
-    bam_directory (str): Desired output directory for the BAM file.
-    basecall_pod (bool): Parameter to allow basecalling to be repeated.
+    dorado_path - file pathway to Dorado
+    dorado_model - canonical model to use for basecalling, refer to xr_params for more info
+    xfasta_path - file pathway to an xFASTA file 
+    min_qscore - minimum read quality score to allow in BAM file, set in xr_params
+    pod_dir - inputted POD5 file or directory to basecall 
+    bam_directory - desired output directory for outputted BAM file. 
+    basecall_pod - parameter allowing for basecalling to be repeated
+    max_reads - maxium number of reads to basecall, default all. In xr_params
+    filter_readIDs -  file path to new line delimited readIDs, default: all
 
     Returns:
-    str: File path to the output BAM file.
+    output_bam - BAM file output file pathway
     """
     output_bam = os.path.join(bam_directory, 'bc.bam')
     
     if basecall_pod or not os.path.exists(output_bam):
-        cmd = '{} basecaller {} --no-trim --emit-moves --min-qscore {} {} > {}'.format(dorado_path, dorado_model, min_qscore, pod_dir, output_bam)
+        print('Xemora [STATUS] Performing basecalling using Dorado')
+        #Base arguments
+        dorado_args = f'--no-trim --emit-moves  {pod_dir}'
+
+        #Optional arguments
+        if filter_readIDs: 
+            dorado_args +=f' -l {filter_readIDs}'
+        if max_reads:
+            dorado_args +=f' -n {max_reads}'
+        if min_qscore: 
+            dorado_args +=f' --min-qscore {min_qscore}'
+
+        #Dorado command 
+        cmd = f'{dorado_path} basecaller {dorado_model} {dorado_args} > {output_bam}'
         os.system(cmd) 
         return output_bam
+        
     else:
         print('Xemora [STATUS] - Skipping POD5 basecalling for modified bases.')
         return output_bam
@@ -428,8 +445,8 @@ def main():
         sys.exit()
 
     # Step 2: Perform basecalling using Dorado
-    mod_bc_bam = dorado_basecall(os.path.expanduser(dorado_path), dorado_model, min_qscore, mod_merged_pod5, mod_bam_dir, basecall_pod) # Modified dataset
-    can_bc_bam = dorado_basecall(os.path.expanduser(dorado_path), dorado_model, min_qscore, can_merged_pod5, can_bam_dir, basecall_pod)
+    mod_bc_bam = dorado_basecall(os.path.expanduser(dorado_path), dorado_model, min_qscore, mod_merged_pod5, mod_bam_dir, basecall_pod, max_mod_reads, filter_mod_readIDs) # Modified dataset
+    can_bc_bam = dorado_basecall(os.path.expanduser(dorado_path), dorado_model, min_qscore, can_merged_pod5, can_bam_dir, basecall_pod, max_can_reads, filter_can_readIDs)
 
     # Step 2.5: Align with minimap2 
     mod_aligned_bam = minimap2_aligner(mod_bc_bam, mod_xfasta, mod_bam_dir)
