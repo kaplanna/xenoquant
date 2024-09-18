@@ -25,11 +25,11 @@ from lib.xr_params import *
 ############################################################
 #Training paths
 
-working_dir = '/home/xenolab/DataAnalysis/Kaplan/training/10.4.1/BSn/240917_GBG_Test/BA-Train'
+working_dir = '/home/xenolab/DataAnalysis/Kaplan/training/10.4.1/BSn/240917_GBG_CA_Demux_Testing/BA-Train'
 xna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/20240614_1437_MN37138_AUD220_fd8b0cba/pod5'
-xna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/reference/CSC_Extended_Ref.fasta'
+xna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/reference/GBG_90mer.fasta'
 dna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/20240627_1621_MN37138_AUD804_5ac1717b/pod5'
-dna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/reference/GBG.fasta'
+dna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/reference/GBG_2F_8R.fasta'
 ############################################################
 #Basecall paths
 

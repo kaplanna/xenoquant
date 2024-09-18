@@ -17,7 +17,7 @@ import numpy as np
 
 
 #Standard basepairs written in 'purine pyrimidine' order
-standard_base_pairs = ['AT','GC', 'NN']
+standard_base_pairs = ['AT','GC']
 
 #Convert this to set
 standard_bases = np.concatenate(list(list(i) for i in standard_base_pairs))
@@ -46,14 +46,14 @@ write_gaps = False
 ############################################################
 ##Analysis instructions 
 
-#Re-basecall pod5 file. Required if new reference files are being used. 
+#Re-basecall pod5 file. Required if new reference files are being used. CHANGE
 basecall_pod = True
 
 #Dual barcode basecall
 barcode_basecall = False
 
 
-#Re-generate BAM files for reference-based basecalling.
+#Re-generate BAM files for reference-based basecalling. CHANGE
 regenerate_bam = True
 
 #Converting BAM files for data correction 
@@ -126,7 +126,7 @@ chunk_num = '500000'
 # New parameters for xr_train_methods.py from Jayson
 overwrite_pod = True
 dorado_path = '~/dorado-0.7.2-linux-x64/bin/dorado'
-dorado_model = '~/dorado-0.7.2-linux-x64/bin/dna_r10.4.1_e8.2_400bps_sup@v5.0.0'
+dorado_model = '~/dorado-0.7.2-linux-x64/bin/dna_r10.4.1_e8.2_400bps_hac@v5.0.0'
 min_qscore = 7
 #Range of chunk context to use (in bp) for modified base training (default +/- 0) 
 mod_chunk_range = 0
@@ -143,7 +143,7 @@ max_mod_reads = 0
 max_can_reads = 0
 
 filter_mod_readIDs = ''
-filter_can_readIDs = '/home/xenolab/DataAnalysis/Kaplan/basecall/240627_NTC_Phusion_xr_Train_Basecall/cutadapt_demux/NB02_FWD_NB08_REV_read_ids.txt'
+filter_can_readIDs = ''#'/home/xenolab/DataAnalysis/Kaplan/basecall/240627_NTC_Phusion_xr_Train_Basecall/cutadapt_demux/NB02_FWD_NB08_REV_read_ids.txt'
 
 ############################################################
 # NanoPlot QC Analysis

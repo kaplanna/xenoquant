@@ -221,7 +221,7 @@ def bed_gen(input_fasta, xna_base, sub_base, chunk_range, chunk_shift):
     Returns:
     str: File path to the generated BED file.
     """
-    output_bed = os.path.join(os.path.dirname(input_fasta), xna_base+'.bed')
+    output_bed = os.path.join(os.path.dirname(input_fasta), sub_base+'.bed')
     if os.stat(input_fasta).st_size == 0: 
         print('Xemora  [ERROR] - Empty xfasta file generated. Check that XNA bases were present in sequence of input fasta file.')
         sys.exit()
