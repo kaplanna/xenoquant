@@ -105,7 +105,7 @@ ml_model_path = 'models/ConvLSTM_w_ref.py'
 mod_base = 'B'
 
 #Most similar substituted canonical base you will be comparing against 
-can_base = 'A'
+can_base = 'G'
 
 #Extent of Kmer content (-,+) to store for model training
 kmer_context ='4 4' 
@@ -143,7 +143,7 @@ max_mod_reads = 0
 max_can_reads = 0
 
 filter_mod_readIDs = ''
-filter_can_readIDs = ''#'/home/xenolab/DataAnalysis/Kaplan/basecall/240627_NTC_Phusion_xr_Train_Basecall/cutadapt_demux/NB02_FWD_NB08_REV_read_ids.txt'
+filter_can_readIDs = ''#/home/xenolab/DataAnalysis/Kaplan/basecall/240627_NTC_Phusion_xr_Train_Basecall/cutadapt_demux/NB04_FWD_NB09_REV_read_ids.txt'
 
 ############################################################
 # NanoPlot QC Analysis

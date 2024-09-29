@@ -3,11 +3,7 @@
 """
 xemora_pipe.py 
 
-Title: Unpublished work
 
-By: H. Kawabe, N. Kaplan, J. A. Marchand
-
-Updated: 8/20/23
 """
 ########################################################################
 ########################################################################
@@ -25,11 +21,11 @@ from lib.xr_params import *
 ############################################################
 #Training paths
 
-working_dir = '/home/xenolab/DataAnalysis/Kaplan/training/10.4.1/BSn/240917_GBG_CA_Demux_Testing/BA-Train'
-xna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/20240614_1437_MN37138_AUD220_fd8b0cba/pod5'
-xna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240614_CSC_xr_Train_Extend/reference/GBG_90mer.fasta'
-dna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/20240627_1621_MN37138_AUD804_5ac1717b/pod5'
-dna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/reference/GBG_2F_8R.fasta'
+working_dir = '/home/xenolab/DataAnalysis/Kaplan/training/10.4.1/BSn/240916_CA_Demux_4x/240928_BG_SC_Training/BG-Train' 
+xna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240104_BSn_90mer_xr_train/20240104_1448_MN37138_ARV509_33c529d5/fast5'
+xna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240104_BSn_90mer_xr_train/BS_90mer.fasta'
+dna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240927_GGC_xr_90mer/20240927_1237_MN41475_AVW803_5af5c123/pod5'
+dna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240927_GGC_xr_90mer/reference/GGC_12F_20R.fasta'
 ############################################################
 #Basecall paths
 
