@@ -1,17 +1,3 @@
-########################################################################
-########################################################################
-"""
-xr_results.py 
-
-Title: Unpublished work
-
-By: H. Kawabe, N. Kaplan, J. A. Marchand
-
-Updated: 5/15/24
-"""
-########################################################################
-########################################################################
-
 import pandas as pd
 import numpy as np
 import os
@@ -19,161 +5,128 @@ import sys
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, roc_auc_score
-
-
-# Access the XNA and DNA variables in the params file
 import xr_params
+
 mod_base = xr_params.mod_base
 can_base = xr_params.can_base
 
+# Define directories and paths
+def define_directories(base_path):
+    results_dir = os.path.join(base_path, 'results')
+    bed_dir = os.path.join(base_path, 'references')
 
-#If you are testing a model where TP/TN/FP/FN is relevant. 
-#P / G / A MUST BE THE FIRST LETTERS IN REF FASTA ALIGNMENT NAMES
-plot_confusion_matrix = False
-plot_roc_curve = True
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
+    
+    return results_dir, bed_dir
 
-
-# Define directories and files based on command line input
-base_path = os.path.expanduser(sys.argv[1])
-# Check if the base directory exists
-if not os.path.exists(base_path):
-    print("Xemora [ERROR] - Basecall directory not found. Exiting.")
-    sys.exit(1)
-
-# Print status message
-print("Xemora [STATUS] - Analyzing Results and Building Plots")
-
-results_dir = os.path.join(base_path, 'Results')
-bed_dir = os.path.join(base_path, 'references')
-
-# Create 'Results' directory if it doesn't exist
-if not os.path.exists(results_dir):
-    os.makedirs(results_dir)
-
-results_dir = os.path.join(base_path, 'Results')
-bed_dir = os.path.join(base_path, 'references')
-
-# Create 'Results' directory if it doesn't exist
-if not os.path.exists(results_dir):
-    os.makedirs(results_dir)
-
-# Define file paths
-sequencing_summary_file_txt = os.path.join(base_path, 'preprocess/fastq/sequencing_summary.txt')
-per_read_modifications_file = os.path.join(base_path, 'per-read_modifications.tsv')
-
-
-# Check if either Z.bed or P.bed exists and set the file path accordingly
-if os.path.exists(os.path.join(bed_dir, f'{mod_base}.bed')):
+# Read and process BED file
+def read_bed_file(bed_dir, mod_base):
     bed_file_path = os.path.join(bed_dir, f'{mod_base}.bed')
-
-else:
-    print("Bed file not found in the directory.")
-    sys.exit(1)
-
-# Read the .bed file into a Pandas DataFrame
-df_bed = pd.read_csv(bed_file_path, delimiter=r'\s+', header=None)
-# Name the columns for better readability
-df_bed.columns = ['Alignment', 'Start', 'End', 'Name', 'Score', 'Strand']
-
-
-# Convert sequencing_summary.txt to sequencing_summary.csv
-df_sequencing_summary = pd.read_csv(sequencing_summary_file_txt, delimiter='\t')
-df_sequencing_summary.to_csv(os.path.join(base_path, 'sequencing_summary.csv'), index=False)
-
-# Read modifications file
-df_modifications = pd.read_csv(per_read_modifications_file, delimiter='\t', header=None, dtype={1: 'str', 2: 'str', 3: 'str'})
-df_modifications.columns = ['read_id', 'read_focus_base', 'label', 'class_pred', 'class_probs']
-
-# Initialize results dataframe and full alignment results file path
-results = []
-alignment_files_list = []
-full_alignment_results_path = os.path.join(results_dir, 'full_alignment_results.csv')
-
-# If the full alignment results file already exists, remove it to start fresh
-if os.path.exists(full_alignment_results_path):
-    os.remove(full_alignment_results_path)
-
-# Iterate through each row in the .bed file DataFrame
-for index, row in df_bed.iterrows():
-    sequence_name = row['Name']
-    alignment = row['Alignment']
-    alignments_file_name = f'alignment_results_{alignment}.csv'
-    alignment_files_list.append(alignments_file_name)
-
-    # Filter rows that match the specific alignment
-    filtered_rows = df_sequencing_summary[df_sequencing_summary['alignment_genome'] == alignment]
     
-    # Merge based on read_id
-    merged_df = pd.merge(filtered_rows, df_modifications, on='read_id')
+    if not os.path.exists(bed_file_path):
+        print("Bed file not found in the directory.")
+        sys.exit(1)
     
-    # Extract class probabilities from the class_probs string
-    merged_df['class_0_probs'] = merged_df['class_probs'].str.split(',').str[0].astype(float)
-    merged_df['class_1_probs'] = 1 - merged_df['class_0_probs']
-    
-    # Retain only the columns needed and remove duplicate read_ids
-    output_df = merged_df[['read_id', 'class_pred', 'class_0_probs', 'class_1_probs']].drop_duplicates(subset='read_id')
-    output_df['class_pred'] = output_df['class_pred'].astype(int)
-    
-    # Append this DataFrame to the full alignment results CSV file
-    output_df.to_csv(full_alignment_results_path, mode='a', header=not os.path.exists(full_alignment_results_path), index=False)
+    df_bed = pd.read_csv(bed_file_path, delimiter=r'\s+', header=None)
+    df_bed.columns = ['Alignment', 'Start', 'End', 'Name', 'Score', 'Strand']
+    return df_bed
 
-    # Save the filtered and processed data to individual CSV files (optional)
-    output_file_path = os.path.join(results_dir, alignments_file_name)
-    output_df.to_csv(output_file_path, index=False)
+# Read the per-read modifications file
+def read_data_files(base_path):
+    per_read_modifications_file = os.path.join(base_path, 'remora_outputs/per-read_modifications.tsv')
+    
+    df_modifications = pd.read_csv(per_read_modifications_file, delimiter='\t', dtype={1: 'str', 2: 'str', 3: 'str'})
+    df_modifications.columns = ['read_id', 'read_focus_base', 'label', 'class_pred', 'class_probs', 'reference_sequence',
+                                'flag', 'ref_start_pos', 'cigar_string', 'ref_length', 'basecalled_sequence', 'q_score']
+    return df_modifications
 
-    # Calculate the number of class predictions (1s and 0s)
-    number_of_1s = output_df['class_pred'].sum()
-    number_of_0s = len(output_df) - number_of_1s
+# Process the data (now using reference_sequence instead of sequencing_summary)
+def process_data(df_modifications, alignment):
+    filtered_rows = df_modifications[df_modifications['reference_sequence'] == alignment]
+    
+    # Extract class probabilities
+    filtered_rows['class_0_probs'] = filtered_rows['class_probs'].str.split(',').str[0].astype(float)
+    filtered_rows['class_1_probs'] = 1 - filtered_rows['class_0_probs']
+    
+    # Ensure class_pred is cast as integer
+    filtered_rows['class_pred'] = pd.to_numeric(filtered_rows['class_pred'], errors='coerce').fillna(0).astype(int)
+    
+    # Retain required columns
+    output_df = filtered_rows[['read_id', 'class_pred', 'class_0_probs', 'class_1_probs']].drop_duplicates(subset='read_id')
+    return output_df
+
+# Calculate counts and percentages for each alignment
+def calculate_results(output_df, alignment):
+    number_of_1s = output_df['class_pred'].sum()  # Count 1s (XNA)
+    number_of_0s = len(output_df) - number_of_1s  # Count 0s (DNA)
     percentage_1 = round((number_of_1s / len(output_df)) * 100, 2)
     percentage_0 = round((number_of_0s / len(output_df)) * 100, 2)
-
-    # Append calculated data to the results list
-    results.append({
+    
+    return {
         'Sequence': alignment,
         'Total Alignments': len(output_df),
         'Number of 1s': number_of_1s,
         'Number of 0s': number_of_0s,
         'Percentage 1': percentage_1,
         'Percentage 0': percentage_0
-    })
+    }
 
-# Save the overall results to a CSV file
-results_df = pd.DataFrame(results)
-final_results_path = os.path.join(results_dir, 'overall_results.csv')
-results_df.to_csv(final_results_path, index=False)
+# Save results to CSV
+def save_results(output_df, results_dir, alignment):
+    alignment_file_name = f'alignment_results_{alignment}.csv'
+    output_file_path = os.path.join(results_dir, alignment_file_name)
+    output_df.to_csv(output_file_path, index=False)
+    return alignment_file_name
 
-print(f"Full alignment results saved to {full_alignment_results_path}")
+# Main execution function to iterate through alignments and process data
+def analyze_results(base_path, plot_confusion_matrix=False, plot_roc_curve=False):
+    results_dir, bed_dir = define_directories(base_path)
+    df_bed = read_bed_file(bed_dir, mod_base)
+    df_modifications = read_data_files(base_path)
+    
+    full_alignment_results_path = os.path.join(results_dir, 'full_alignment_results.csv')
+    if os.path.exists(full_alignment_results_path):
+        os.remove(full_alignment_results_path)
+    
+    results = []
+    alignment_files_list = []
 
+    for _, row in df_bed.iterrows():
+        alignment = row['Alignment']
+        output_df = process_data(df_modifications, alignment)
+        output_df.to_csv(full_alignment_results_path, mode='a', header=not os.path.exists(full_alignment_results_path), index=False)
+        
+        # Calculate and store results
+        result = calculate_results(output_df, alignment)
+        results.append(result)
 
-# Save the overall results to a CSV file
-print("Xemora [STATUS] - Writing Overall Results File")
-final_results_path = os.path.join(results_dir, 'overall_results.csv')
-results_df.to_csv(final_results_path, index=False)
+        alignment_file_name = save_results(output_df, results_dir, alignment)
+        alignment_files_list.append(alignment_file_name)
+    
+    # Save overall results
+    results_df = pd.DataFrame(results)
+    final_results_path = os.path.join(results_dir, 'overall_results.csv')
+    results_df.to_csv(final_results_path, index=False)
+    
+    print(f"Full alignment results saved to {full_alignment_results_path}")
 
-# Mapping dictionary
-alignment_map = {
-    'C': 'G',
-    'T': 'A',
-    'G': 'G',
-    'A': 'A',
-    'P': 'P',
-    'Z': 'P'
-        }
-xna_type = alignment_map.get(mod_base, mod_base)
-dna_type = alignment_map.get(can_base, can_base)
+    # Optional: plot confusion matrix or ROC curve
+    if plot_confusion_matrix:
+        plot_conf_matrix(results_df, results_dir)
 
-if plot_confusion_matrix:
+    if plot_roc_curve:
+        plot_roc(alignment_files_list, results_dir)
+
+# Function to plot confusion matrix
+def plot_conf_matrix(results_df, results_dir):
     try:
-        TP = 0
-        FP = 0
-        TN = 0
-        FN = 0
+        TP = TN = FP = FN = 0
+        xna_type = xr_params.mod_base
+        dna_type = xr_params.can_base
 
-
-
-        for index, row in results_df.iterrows():
+        for _, row in results_df.iterrows():
             alignment = row['Sequence'][0]
-
             if alignment == dna_type:
                 FN += row['Number of 1s']
                 TN += row['Number of 0s']
@@ -181,104 +134,44 @@ if plot_confusion_matrix:
                 TP += row['Number of 1s']
                 FP += row['Number of 0s']
 
-        # Count-based Confusion Matrix
         conf_matrix_counts = np.array([[TP, FP], [FN, TN]])
         labels = [f"{mod_base}", f"{can_base}"]
-
-        sns.set(font_scale=1.2)
-        plt.figure(figsize=(8, 6))
         sns.heatmap(conf_matrix_counts, annot=True, fmt='g', cmap='rocket_r', xticklabels=labels, yticklabels=labels)
         plt.xlabel('Predicted')
         plt.ylabel('Actual')
         plt.title('Confusion Matrix (Counts)')
         plt.savefig(os.path.join(results_dir, 'confusion_matrix_counts.pdf'))
         plt.show()
-
-        # Normalized Confusion Matrix
-        row_sums = conf_matrix_counts.sum(axis=1, keepdims=True)
-        conf_matrix_norm = conf_matrix_counts / row_sums
-
-        plt.figure(figsize=(8, 6))
-        sns.heatmap(conf_matrix_norm, annot=True, fmt='g', cmap='rocket_r', xticklabels=labels, yticklabels=labels)
-        plt.xlabel('Predicted')
-        plt.ylabel('Actual')
-        plt.title('Confusion Matrix (Normalized)')
-        plt.savefig(os.path.join(results_dir, 'confusion_matrix_normalized.pdf'))
-        plt.show()
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Error generating confusion matrix: {e}")
 
-if plot_roc_curve == True: #you need to specify ground truth alignments
-
-
-    # Initialize lists to aggregate true class labels and predicted probabilities
-    y_true_agg = []
-    y_prob_agg = []
-
-
-    # Iterate through each alignment file to aggregate the data for ROC curve
-    for alignments_file_name in alignment_files_list:
-        output_file_path = os.path.join(results_dir, alignments_file_name)
-        df_other = pd.read_csv(output_file_path)
-
-        # Set the true class based on the specific alignment names
-        # Specify particular alignments for ROC curve
-        dna_alignment = "B10.C.AT+XPOS[B:75]"
-        xna_alignment = "B7.C.BS+XPOS[B:79]"
-        print(f"DNA Alignment for ROC: {dna_alignment}")
-        print(f"XNA Alignment for ROC: {xna_alignment}")
-
-        # Use the full name from the alignments file without splitting
-        alignment = alignments_file_name.replace('alignment_results_', '').replace('.csv', '')
-
-        if alignment == xna_alignment:
-            true_class = 1  # XNA
-        elif alignment == dna_alignment:
-            true_class = 0  # DNA
-        else:
-            print(f"Skipping unknown or unspecified alignment: {alignment}")
-            continue  # Skip this alignment if it doesn't match the specified ones
-
-
-        # Append the true class labels and predicted probabilities
-        y_true_agg.extend([true_class] * len(df_other))
-        y_prob_agg.extend(df_other['class_1_probs'].tolist())
-
-    # Plot the aggregated ROC curve
+# Function to plot ROC curve
+def plot_roc(alignment_files_list, results_dir):
     try:
-        # Compute the ROC curve
-        fpr, tpr, thresholds = roc_curve(y_true_agg, y_prob_agg)
+        y_true_agg = []
+        y_prob_agg = []
+
+        for alignment_file in alignment_files_list:
+            df_other = pd.read_csv(os.path.join(results_dir, alignment_file))
+            true_class = 1 if 'BS' in alignment_file else 0
+            y_true_agg.extend([true_class] * len(df_other))
+            y_prob_agg.extend(df_other['class_1_probs'])
+
+        fpr, tpr, _ = roc_curve(y_true_agg, y_prob_agg)
         auc = roc_auc_score(y_true_agg, y_prob_agg)
-        print(f'The area under ROC curve for {mod_base} vs {can_base} is {auc:.2f}')
-
-        # Plot the ROC curve
-        plt.figure(figsize=(10, 8))
-        # Draw the ROC curve with specified orange color and line style
-        plt.plot(fpr, tpr, label=f'ROC curve for {mod_base} (AUC = {auc:.2f})', linewidth=2, linestyle='-', color='orange')
-
-        # Add a diagonal dashed line with black color
+        plt.plot(fpr, tpr, label=f'ROC Curve (AUC = {auc:.2f})', color='orange')
         plt.plot([0, 1], [0, 1], linestyle='--', color='black')
-
-        # Customize axis scale
-        plt.axis('square')  # Make the plot square
-        plt.xlim([0, 1])
-        plt.ylim([0, 1])
-        plt.gca().add_patch(plt.Rectangle((0, 0), 1, 1, fill=False, edgecolor='black', linewidth=2))
-        plt.gca().set_facecolor('white')
-        plt.xlabel('False Positive Rate', fontsize=14)
-        plt.ylabel('True Positive Rate', fontsize=14)
-        plt.title('Receiver Operating Characteristic (ROC) Curve', fontsize=16)
-        plt.grid(False)
-        plt.legend(loc='lower right', fontsize=12)
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('ROC Curve')
+        plt.legend()
         plt.savefig(os.path.join(results_dir, 'roc_curve.pdf'))
         plt.show()
-
     except Exception as e:
-        print(f"Failed to generate ROC curve. Error: {e}")
-        
- 
+        print(f"Error generating ROC curve: {e}")
 
-
-
-
+# Run the analysis
+if __name__ == "__main__":
+    base_path = os.path.expanduser(sys.argv[1])
+    analyze_results(base_path, plot_confusion_matrix=False, plot_roc_curve=False)
 

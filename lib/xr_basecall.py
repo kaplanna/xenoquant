@@ -77,43 +77,6 @@ else:
 
 
 
-# Barcoding
-if barcode_basecall == True: 
-    barcode_cmd = (os.path.expanduser(guppy_barcoder_path) + 
-                   ' --input_path ' + os.path.join(mod_fastq_dir, 'pass') + 
-                   ' --save_path ' + os.path.join(mod_dir, 'barcoded') + 
-                   ' --bam_out ' +
-                   #' --config configuration_dual.cfg' + 
-                   ' --barcode_kits SQK-NBD114-96' +
-                   ' --min_score_barcode_front 60 --min_score_barcode_rear 60')
-    os.system(barcode_cmd)
-    
-    #Barcode counting output
-    def parse_barcoding_summary(file_path):
-        # Read the barcoding summary file
-        df = pd.read_csv(file_path, sep='\t')
-
-        # Count the occurrences of each barcode arrangement
-        barcode_counts = df['barcode_arrangement'].value_counts()
-
-        # Convert to DataFrame for easier handling
-        barcode_counts_df = barcode_counts.reset_index()
-        barcode_counts_df.columns = ['Barcode', 'Count']
-
-        return barcode_counts_df
-
-    # Replace this with the path to your barcoding summary file
-    file_path = os.path.join(mod_dir, 'barcoded', 'barcoding_summary.txt')
-
-    # Parse the file and get the counts
-    barcode_counts_df = parse_barcoding_summary(file_path)
-    print(barcode_counts_df)
-    
-    output_file_path = os.path.join(mod_dir, 'barcoded', 'barcoding_counts.csv')
-    barcode_counts_df.to_csv(output_file_path, index=False)
-    
-else:
-    print('Xemora [STATUS] - Skipping Barcoding step.')
 
 
 

@@ -51,7 +51,6 @@ mod_dir = check_make_dir(os.path.join(working_dir,'preprocess'))
 mod_pod_dir = check_make_dir(os.path.join(mod_dir,'pod5'))
 mod_bam_dir = check_make_dir(os.path.join(mod_dir,'bam'))
 remora_output_dir = check_make_dir(os.path.join(working_dir, 'remora_outputs'))
-analysis_dir = check_make_dir(os.path.join(working_dir, 'results'))
 #########################################################################
 
 #Methods 
@@ -150,34 +149,145 @@ def pod5_merge(pod5_input, pod_dir, overwrite_pod):
         print('Xemora [STATUS]- Skipping POD5 merge')
     return merged_pod5
     
-def dorado_basecall(dorado_path, dorado_model, xfasta_path, min_qscore, pod_dir, bam_directory, basecall_pod):
+def dorado_basecall(dorado_path, dorado_model, min_qscore, pod_dir, bam_directory, basecall_pod, max_reads, filter_readIDs):
     """
     dorado_basecall takes in various inputs needed to run the Dorado basecaller
     and returns the file path to the generated BAM file 
     
     Parameters: 
-    dorado_path - file pathway to Dorado 
+    dorado_path - file pathway to Dorado
     dorado_model - canonical model to use for basecalling, refer to xr_params for more info
     xfasta_path - file pathway to an xFASTA file 
     min_qscore - minimum read quality score to allow in BAM file, set in xr_params
     pod_dir - inputted POD5 file or directory to basecall 
     bam_directory - desired output directory for outputted BAM file. 
     basecall_pod - parameter allowing for basecalling to be repeated
-    
+    max_reads - maxium number of reads to basecall, default all. In xr_params
+    filter_readIDs -  file path to new line delimited readIDs, default: all
+
     Returns:
     output_bam - BAM file output file pathway
     """
     output_bam = os.path.join(bam_directory, 'bc.bam')
     
     if basecall_pod or not os.path.exists(output_bam):
-        cmd = '{} basecaller {} --reference {} --no-trim --emit-moves --min-qscore {} {} > {}'.format(dorado_path, dorado_model, xfasta_path, min_qscore, pod_dir, output_bam)
+        print('Xemora [STATUS] Performing basecalling using Dorado')
+        #Base arguments
+        dorado_args = f'--no-trim --emit-moves  {pod_dir}'
+
+        #Optional arguments
+        if filter_readIDs: 
+            dorado_args +=f' -l {filter_readIDs}'
+        if max_reads:
+            dorado_args +=f' -n {max_reads}'
+        if min_qscore: 
+            dorado_args +=f' --min-qscore {min_qscore}'
+
+        #Dorado command 
+        cmd = f'{dorado_path} basecaller {dorado_model} {dorado_args} > {output_bam}'
         os.system(cmd) 
+        # Add Dorado summary step here after basecalling
+        summary_cmd = 'dorado summary -v {} > {}'.format(output_bam, os.path.join(bam_directory, 'sequencing_summary.txt'))
+        os.system(summary_cmd)
+        print('Xemora [STATUS] - Dorado summary saved to sequencing_summary.txt.')
+        
         return output_bam
         
     else:
-        print('Xemora  [STATUS] - Skipping POD5 basecalling for modified bases.')
+        print('Xemora [STATUS] - Skipping POD5 basecalling for modified bases.')
         return output_bam
 
+
+def minimap2_aligner(input_bam, xfasta_path, bam_directory):
+    """
+    minimap2_aligner takes in a bam file from Dorado basecaller and outputs a new 
+    aligned bam file using an xFASTA formatted file 
+
+    Parameters:
+    input_bam - file path to bam file to align
+    xfasta_path - file pathway to xFASTA file to align basecalls to 
+    bam_directory - output file pathway for aligned BAM file 
+
+    Returns: 
+    aligned_bam - minimap2 aligned bam file 
+    """
+    aligned_bam = os.path.join(bam_directory, 'aligned.BAM')
+    cmd = 'samtools fastq -T "*" '+input_bam+ ' | minimap2 -y -ax map-ont --score-N 0 --secondary no --sam-hit-only --MD '+xfasta_path+ ' - | samtools view -F0x800 -bho ' +aligned_bam
+    os.system(cmd)
+    
+    return aligned_bam
+
+    return aligned_bam
+def get_primary_alignments(bam_file):
+    """
+    Extracts primary alignments from a BAM file, including reference lengths.
+
+    This function opens a BAM file and iterates through each read, 
+    identifying the primary alignments (i.e., alignments that are not 
+    secondary or supplementary). It maps the read IDs to a list containing 
+    its primary reference sequence (RNAME), CIGAR string, read sequence, 
+    quality scores, alignment position (POS), and the reference length.
+
+    Parameters:
+        bam_file (str): Path to the BAM file.
+
+    Returns:
+        dict: A dictionary where the keys are read IDs (query names) and the 
+        values are lists containing the reference sequence name (RNAME), 
+        CIGAR string, read sequence, quality scores, the alignment position (POS), 
+        and the reference length (REF_LEN).
+        
+    Raises:
+        FileNotFoundError: If the BAM file does not exist.
+        ValueError: If the BAM file cannot be parsed.
+    """
+    # Suppress warnings about missing BAM index
+    pysam.set_verbosity(0)
+    
+    try:
+        # Open the BAM file
+        bam = pysam.AlignmentFile(bam_file, "rb")
+    except FileNotFoundError:
+        raise FileNotFoundError(f"BAM file {bam_file} does not exist.")
+    except ValueError:
+        raise ValueError(f"Unable to parse the BAM file {bam_file}.")
+
+    # Dictionary to store read_id -> [reference sequence, CIGAR string, read sequence, QUAL, POS, REF_LEN]
+    read_to_info = {}
+
+    # Iterate through each read in the BAM file
+    for read in bam:
+        # Check if the read is a primary alignment
+        if not read.is_secondary and not read.is_supplementary:
+            read_id = read.query_name
+            ref_name = bam.get_reference_name(read.reference_id)  # RNAME
+            cigar_string = read.cigarstring  # CIGAR
+            basecalled_sequence = read.query_sequence  # SEQ
+            q_score = read.query_qualities  # QUAL
+            ref_start_pos = read.reference_start  # POS (0-based)
+            flag = read.flag
+
+            # Get the reference length for the current reference
+            ref_length = bam.lengths[read.reference_id]  # REF_LEN
+
+            # Store the read_id and associated information, including the reference length
+            read_to_info[read_id] = {
+                'reference_sequence': ref_name,
+                'cigar_string': cigar_string,
+                'basecalled_sequence': basecalled_sequence,
+                'q_score': q_score,
+                'ref_start_pos': ref_start_pos,
+                'flag': flag,
+                'reference_length': ref_length  # Add reference length
+            }
+
+    # Close the BAM file
+    bam.close()
+
+    # Reset verbosity
+    pysam.set_verbosity(1)
+
+    return read_to_info
 #Step 4: Bed file generation 
 def bed_gen(input_fasta, xna_base, sub_base, chunk_range, chunk_shift): 
     """
@@ -317,25 +427,27 @@ def xemora_basecall(working_dir, chunk_file, model_file):
         print('Xemora [ERROR] - Failed to initialize basecalling model Check logs.')
         sys.exit()
         
-'''
-def data_analysis(per_read_modifications, summary_modifications):
-    print('Filtering out per-red_modifications.tsv and generating consensus results')
-    #Calculating consensus modification
-    cmd = 'python lib/xr_consensus_modifications.py '+working_dir+' '+per_read_modifications+' '+os.path.join(ref_dir,mod_base)+'.bed'
-    os.system(cmd)
-'''
-def data_analysis(analysis_dir, per_read_modifications):
+def add_per_read_mapping(primary_alignments, per_read_modifications):
     """
-    Note: For the focus position analysis, Jorge recenters on one so we may need to re add the proper indeces at some point
+    add_per_read_mapping adds reference sequences to the per_read_modifications 
+    file outputted from Remora. Used to perform decoupled analysis downstream
     """
-    normalized_per_read_modifications = os.path.join(analysis_dir, 'per_read_modifications_normalized.tsv')
-    cmd = 'python lib/xr_realign.py '+per_read_modifications+' '+normalized_per_read_modifications
-    os.system(cmd)
+    # Read the CSV file into a DataFrame
+    df = pd.read_csv(per_read_modifications, delimiter='\t')
 
-    focus_normalized_per_read_modifications = os.path.join(os.path.dirname(normalized_per_read_modifications), 'focus_base_modifications_normalized.tsv')
-    graph_path = os.path.join(analysis_dir, 'combined_plots.png')
-    cmd = 'python lib/xr_focus_position.py '+normalized_per_read_modifications+' '+focus_normalized_per_read_modifications+' '+graph_path
-    os.system(cmd)
+    # Map each field to its own column using the names in the dictionary
+    df['reference_sequence'] = df['read_id'].map(lambda read_id: primary_alignments.get(read_id, {}).get('reference_sequence'))
+    df['flag'] = df['read_id'].map(lambda read_id: primary_alignments.get(read_id, {}).get('flag'))
+    df['ref_start_pos'] = df['read_id'].map(lambda read_id: primary_alignments.get(read_id, {}).get('ref_start_pos'))
+    df['cigar_string'] = df['read_id'].map(lambda read_id: primary_alignments.get(read_id, {}).get('cigar_string'))
+    df['ref_length'] = df['read_id'].map(lambda read_id: primary_alignments.get(read_id, {}).get('reference_length'))
+    df['basecalled_sequence'] = df['read_id'].map(lambda read_id: primary_alignments.get(read_id, {}).get('basecalled_sequence'))
+    df['q_score'] = df['read_id'].map(lambda read_id: primary_alignments.get(read_id, {}).get('q_score'))
+
+   # Write the updated DataFrame back to a new TSV file
+    df.to_csv(per_read_modifications, sep='\t', index=False)
+
+    return per_read_modifications
 
 def main():
     """
@@ -360,18 +472,23 @@ def main():
         sys.exit()
     
     #Perform basecalling using Dorado
-    bc_bam = dorado_basecall(dorado_path, dorado_model, xfasta_file, min_qscore, merged_pod5, mod_bam_dir, basecall_pod)
+    bc_bam = dorado_basecall(dorado_path, dorado_model, min_qscore, merged_pod5, mod_bam_dir, basecall_pod, max_bc_reads, filter_readIDs_bc)
+    
+    #Align using minimap2 
+    aligned_bam = minimap2_aligner(bc_bam, xfasta_file, mod_bam_dir)
+
+    #Get primary alignments for reference sequence assignment
+    primary_alignments = get_primary_alignments(aligned_bam)
     
     #Generate BED file for region to analyze 
     bed_file = bed_gen(xfasta_file, mod_base, mod_base, mod_chunk_range, mod_chunk_shift)
     
     #Generate chunk files to analyze 
-    basecalling_chunks = generate_chunks(merged_pod5, bc_bam, chunk_dir, bed_file, mod_base, kmer_context, kmer_table_path, regenerate_chunks)
+    basecalling_chunks = generate_chunks(merged_pod5, aligned_bam, chunk_dir, bed_file, mod_base, kmer_context, kmer_table_path, regenerate_chunks)
     
     #Run Xemora validate
     per_read_mod, summary_mod = xemora_basecall(working_dir, basecalling_chunks, model_file)
+    per_read_mod = add_per_read_mapping(primary_alignments, per_read_mod)
 
-    #perform data analysis and data visualization
-    data_analysis(analysis_dir, per_read_mod)
 if __name__ == "__main__":
     main()

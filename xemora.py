@@ -114,7 +114,7 @@ if args.subparsers == 'basecall':
 
 
     if exit_flag == False: 
-        cmd = 'python lib/xr_basecall.py '+args.w+' '+args.f+' '+args.r+' '+args.m
+        cmd = 'python lib/xr_basecall_methods.py '+args.w+' '+args.f+' '+args.r+' '+args.m
         os.system(cmd)
     else: 
         print('Xemora [ERROR] - At least one file path not properly set. Xemora basecaller exiting.')
