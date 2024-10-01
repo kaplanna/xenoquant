@@ -21,11 +21,12 @@ from lib.xr_params import *
 ############################################################
 #Training paths
 
-working_dir = '/home/xenolab/DataAnalysis/Kaplan/training/10.4.1/BSn/240916_CA_Demux_4x/240928_BG_SC_Training/BG-Train' 
-xna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240104_BSn_90mer_xr_train/20240104_1448_MN37138_ARV509_33c529d5/fast5'
-xna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240104_BSn_90mer_xr_train/BS_90mer.fasta'
-dna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240927_GGC_xr_90mer/20240927_1237_MN41475_AVW803_5af5c123/pod5'
-dna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240927_GGC_xr_90mer/reference/GGC_12F_20R.fasta'
+working_dir = '/home/xenolab/DataAnalysis/Kaplan/training/10.4.1/BSn/240930_NTC_Training_Set/240930_GBT_Train/ST-Train' 
+xna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240417_ACGBTCG_xr_train/20240417_1649_MN37138_ASP586_df7c41f0/200_pod5_training'
+xna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240417_ACGBTCG_xr_train/reference/ACGBTCG_ref.fasta'
+dna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/20240627_1621_MN37138_AUD804_5ac1717b/750_pod5_train'
+dna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/reference/GAT_5F_10R.fasta'
+
 ############################################################
 #Basecall paths
 

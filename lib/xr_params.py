@@ -102,10 +102,10 @@ ml_model_path = 'models/ConvLSTM_w_ref.py'
 
 
 #Modified base in Fasta sequence you wish to train model or use model to basecall
-mod_base = 'B'
+mod_base = 'S'
 
 #Most similar substituted canonical base you will be comparing against 
-can_base = 'G'
+can_base = 'T'
 
 #Extent of Kmer content (-,+) to store for model training
 kmer_context ='4 4' 
@@ -143,7 +143,7 @@ max_mod_reads = 0
 max_can_reads = 0
 
 filter_mod_readIDs = ''
-filter_can_readIDs = ''#/home/xenolab/DataAnalysis/Kaplan/basecall/240627_NTC_Phusion_xr_Train_Basecall/cutadapt_demux/NB04_FWD_NB09_REV_read_ids.txt'
+filter_can_readIDs = '/home/xenolab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240930_NTC_Phusion_Training_Testing/240930_NTC_Phusion_750_Training_Set/demux/NB05_FWD_NB10_REV_read_ids.txt'
 
 ############################################################
 # NanoPlot QC Analysis

@@ -1,0 +1,25 @@
+[arrangement]
+name = "xr"
+kit = "NB"
+
+mask1_front = "CGATTC"
+mask1_rear = "GGTCT"
+
+# Barcode sequences
+barcode1_pattern = "NB%02i"
+first_index = 1
+last_index = 5
+
+## Scoring options
+[scoring]
+max_barcode_penalty = 13              # Increased to allow more mismatches (was 11)
+barcode_end_proximity = 75          # Increased to allow barcode positioning further from the ends (was 75)
+min_barcode_penalty_dist = 2          # Decreased to allow smaller differences between barcodes for classification (was 3)
+min_separation_only_dist = 4          # Decreased to allow less separation between top-2 barcodes (was 6)
+flank_left_pad = 8                    # Increased to allow more bases from the left flank during alignment (was 5)
+flank_right_pad = 15                  # Increased to allow more bases from the right flank during alignment (was 10)
+front_barcode_window = 200            # Increased to allow a wider window at the front of the read (was 175)
+rear_barcode_window = 200             # Increased to allow a wider window at the rear of the read (was 175)
+midstrand_flank_score = 0.90          # Decreased to allow less strict flank alignment scoring for mid-strand barcodes (was 0.95)
+min_flank_score = 0.85              # Decreased to allow less strict flank alignment for barcodes at the ends (adjust as needed)
+
