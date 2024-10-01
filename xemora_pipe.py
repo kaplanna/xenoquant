@@ -41,9 +41,9 @@ bc_model_file = '/home/xenolab/github/kaplanna/xemora/models/240930_NTC_Models/G
 
 ############################################################
 train_model = False
-basecall_reads = True
-output_basecall_results = True
-cutadapt_demux = False
+basecall_reads = False
+output_basecall_results = False
+cutadapt_demux = True
 ############################################################
 #conda activate xemora-re
 
@@ -69,6 +69,6 @@ if output_basecall_results==True:
     
 #demux
 if cutadapt_demux==True: 
-    demux_path = './demux/xr_demux_cutadapt.py'
+    demux_path = './lib/xr_demux.py'
     cmd = f'python {demux_path} {bc_working_dir}'
     os.system(cmd)    
