@@ -12,7 +12,7 @@ can_base = xr_params.can_base
 
 # Define directories and paths
 def define_directories(base_path):
-    results_dir = os.path.join(base_path, 'results')
+    results_dir = os.path.join(base_path, 'alignment_results')
     bed_dir = os.path.join(base_path, 'references')
 
     if not os.path.exists(results_dir):

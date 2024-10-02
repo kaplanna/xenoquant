@@ -104,12 +104,6 @@ def merge_read_ids_with_modifications(modifications_df, read_ids_csv):
 def save_merged_output(merged_df, output_file):
     merged_df.to_csv(output_file, sep='\t', index=False)
 
-error_rate = 0.20
-min_overlap = 14
-min_len = 120
-max_len = 200
-
-
 # Parse the barcodes from the file
 forward_barcodes, reverse_barcodes = parse_barcodes(barcode_file)
 

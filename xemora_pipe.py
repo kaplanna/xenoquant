@@ -41,8 +41,8 @@ bc_model_file = '/home/xenolab/github/kaplanna/xemora/models/240930_NTC_Models/G
 
 ############################################################
 train_model = False
-basecall_reads = True
-output_basecall_results = True
+basecall_reads = False
+output_basecall_results = False
 cutadapt_demux = True
 ############################################################
 #conda activate xemora-re
