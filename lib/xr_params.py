@@ -102,10 +102,10 @@ ml_model_path = 'models/ConvLSTM_w_ref.py'
 
 
 #Modified base in Fasta sequence you wish to train model or use model to basecall
-mod_base = 'B'
+mod_base = 'S'
 
 #Most similar substituted canonical base you will be comparing against 
-can_base = 'A'
+can_base = 'T'
 
 #Extent of Kmer content (-,+) to store for model training
 kmer_context ='4 4' 
