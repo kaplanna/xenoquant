@@ -149,7 +149,7 @@ max_mod_reads = 0
 max_can_reads = 0
 max_bc_reads = 0
 
-filter_mod_readIDs = '/home/xenolab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240930_NTC_Phusion_Training_Testing/240930_NTC_Phusion_750_Training_Set/demux/NB01_FWD_NB07_REV_read_ids.txt'
+filter_mod_readIDs = ''#/home/xenolab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240930_NTC_Phusion_Training_Testing/240930_NTC_Phusion_750_Training_Set/demux/NB01_FWD_NB07_REV_read_ids.txt'
 filter_can_readIDs = ''
 filter_readIDs_bc = ''
 

@@ -10,7 +10,7 @@ def combine_results(parent_dir, output_file):
         
         # Check if it's a directory
         if os.path.isdir(folder_path):
-            results_file = os.path.join(folder_path, 'alignment_results', 'overall_results.csv')
+            results_file = os.path.join(folder_path, 'demux', 'overall_demux_results.csv')
             
             # Check if the file exists
             if os.path.exists(results_file):
@@ -29,7 +29,7 @@ def combine_results(parent_dir, output_file):
     print(f"Combined CSV saved to {output_file}")
 
 # Example usage
-parent_directory = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/241002_Model_Testing/GBC_Context/DNA_Dataset_90mers'  
+parent_directory = '/home/xenolab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/241003_B5R_Basecall'  
 output_csv = 'full_results.csv'
 combine_results(parent_directory, output_csv)
 

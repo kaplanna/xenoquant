@@ -30,20 +30,20 @@ dna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240104_BSn_90mer_xr_train
 ############################################################
 #Basecall paths
 
-bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/241002_Model_Testing/GBC_Context/XNA_Dataset_90mers/BA-Basecall'
-bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240104_BSn_90mer_xr_train/20240104_1448_MN37138_ARV509_33c529d5/200_fast5_test'
-bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240104_BSn_90mer_xr_train/BS_90mer.fasta'
-bc_model_file = '/home/marchandlab/github/kaplanna/xemora/models/240930_NTC_Models/GBC-BA-model_best.pt'
+bc_working_dir = '/home/xenolab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/241011_B18_B19_part1_bc/ST-Basecall'
+bc_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/241011_B18_B19_Pol_Screen_1/20241011_1215_MN41475_AVY513_81500ab7/pod5'
+bc_xna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/241011_B18_B19_Pol_Screen_1/reference/B18_B19_ref.fasta'
+bc_model_file = '/home/xenolab/github/kaplanna/xemora/models/240930_NTC_Models/GBC-ST-model_best.pt'
 #bc_model_file = working_dir+'/model/model_best.pt'
 
 
 ############################################################
 
 ############################################################
-train_model = True
-basecall_reads = False
-output_alignment_results = False
-cutadapt_demux = False
+train_model = False
+basecall_reads = True
+output_alignment_results = True
+cutadapt_demux = True
 ############################################################
 #conda activate xemora-re
 
