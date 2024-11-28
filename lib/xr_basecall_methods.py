@@ -460,7 +460,7 @@ def main():
     
     #Verify only one file type in raw data directory
     filetype = validate_read_directory(raw_dir)
-    print(filetype)
+    #print(filetype)
     
     #Perform either FAST5 converison or POD55 merging
     if filetype == 'fast5':
@@ -472,8 +472,10 @@ def main():
         sys.exit()
     
     #Perform basecalling using Dorado
-    bc_bam = dorado_basecall(dorado_path, dorado_model, min_qscore, merged_pod5, mod_bam_dir, basecall_pod, max_bc_reads, filter_readIDs_bc)
-    
+    if basecall_pod == True:
+        bc_bam = dorado_basecall(dorado_path, dorado_model, min_qscore, merged_pod5, mod_bam_dir, basecall_pod, max_bc_reads, filter_readIDs_bc)
+    else:
+        print('[STATUS] Skipping Dorado Basecall')
     #Align using minimap2 
     aligned_bam = minimap2_aligner(bc_bam, xfasta_file, mod_bam_dir)
 

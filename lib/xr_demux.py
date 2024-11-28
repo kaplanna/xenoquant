@@ -8,6 +8,7 @@ from collections import Counter
 from xr_tools  import *
 from xr_params import *
 
+
 print('Xemora [Status] - Initializing Xemora Demux.')
 working_dir = os.path.expanduser(sys.argv[1])
 demux_dir = check_make_dir(os.path.join(working_dir, 'demux'))
@@ -15,7 +16,8 @@ fastq_dir = check_make_dir(os.path.join(demux_dir, 'fastq'))
 mod_dir = os.path.join(working_dir,'preprocess')
 mod_bam_dir = os.path.join(mod_dir,'bam')
 bc_bam = os.path.join(mod_bam_dir,'bc.bam')
-barcode_file = "./demux/xpcr_barcodes_2x.fasta"
+barcode_list = "./demux/barcode_files/NB_BARCODES.csv"
+
 
 def reverse_complement(seq):
     complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
@@ -45,28 +47,49 @@ def combine_and_deduplicate_fastq(file1, file2, output_file):
                     unique_reads.add(seq)
                     outfile.writelines([title, seq, plus, qual])
 
-def parse_barcodes(barcode_file):
-    forward_barcodes = {}
-    reverse_barcodes = {}
-    with open(barcode_file, 'r') as f:
-        for line in f:
-            if line.startswith('>'):
-                name = line.strip()[1:]
-                sequence = next(f).strip()
-                if 'FWD' in name:
-                    forward_barcodes[name] = sequence
-                elif 'REV' in name:
-                    reverse_barcodes[name] = sequence
-    return forward_barcodes, reverse_barcodes
+def load_full_barcode_list(barcode_list):
+    """
+    Load the full barcode list from a CSV file into a dictionary.
+    
+    Args:
+        barcode_list (str): Path to the CSV file with BARCODE_NAME and BARCODE_SEQUENCE columns.
+        
+    Returns:
+        dict: A dictionary where keys are BARCODE_NAME and values are BARCODE_SEQUENCE.
+    """
+    barcode_dict = {}
+    with open(barcode_list, 'r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            name = row['BARCODE_NAME']
+            sequence = row['BARCODE_SEQUENCE']
+            barcode_dict[name] = sequence
+    return barcode_dict
 
-def generate_barcode_pairs(forward_barcodes, reverse_barcodes):
-    pairs = {}
-    for fwd_name, fwd_seq in forward_barcodes.items():
-        for rev_name, rev_seq in reverse_barcodes.items():
-            pair_name = f"{fwd_name}_{rev_name}"
-            pairs[pair_name] = (fwd_seq, rev_seq)
-    return pairs
-
+def map_barcode_pairs(pair_csv, barcode_dict):
+    """
+    Map barcode pairs from names to sequences using the full barcode list dictionary.
+    
+    Args:
+        pair_csv (str): Path to the CSV file with FWD_BARCODE and REV_BARCODE columns.
+        barcode_dict (dict): Dictionary mapping BARCODE_NAME to BARCODE_SEQUENCE.
+        
+    Returns:
+        dict: A dictionary where keys are pair names and values are tuples of forward and reverse sequences.
+    """
+    barcode_pairs = {}
+    with open(pair_csv, 'r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            fwd_name = row['FWD_BARCODE']
+            rev_name = row['REV_BARCODE']
+            pair_name = f"{fwd_name}_FWD_{rev_name}_REV"
+            fwd_sequence = barcode_dict.get(fwd_name)
+            rev_sequence = barcode_dict.get(rev_name)
+            if not fwd_sequence or not rev_sequence:
+                raise ValueError(f"Barcode name {fwd_name} or {rev_name} not found in the full barcode list.")
+            barcode_pairs[pair_name] = (fwd_sequence, rev_sequence)
+    return barcode_pairs
 
 
 def extract_read_ids(fastq_file, barcode_pair, read_ids_list):
@@ -104,16 +127,16 @@ def merge_read_ids_with_modifications(modifications_df, read_ids_csv):
 def save_merged_output(merged_df, output_file):
     merged_df.to_csv(output_file, sep='\t', index=False)
 
-# Parse the barcodes from the file
-forward_barcodes, reverse_barcodes = parse_barcodes(barcode_file)
+# Load the full barcode list
+barcode_dict = load_full_barcode_list(barcode_list)
 
-# Generate all forward-reverse barcode pairs
-barcode_pairs = generate_barcode_pairs(forward_barcodes, reverse_barcodes)
+# Map barcode pairs to sequences
+barcode_pairs = map_barcode_pairs(barcode_pair_csv, barcode_dict)
 
 # Prepare to collect all read IDs
 all_read_ids = []
 
-# Process the bam file with each barcode pair
+# Process the BAM file with each barcode pair
 for barcode_pair, (barcode1, barcode2) in barcode_pairs.items():
     barcode2_rc = reverse_complement(barcode2)
     barcode1_rc = reverse_complement(barcode1)

@@ -21,24 +21,23 @@ from lib.xr_params import *
 ############################################################
 #Training paths
 
-working_dir = '/home/xenolab/DataAnalysis/Kaplan/training/10.4.1/BSn/241002_BA-ST_REV/ST-REV' 
-xna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/20240627_1621_MN37138_AUD804_5ac1717b/750_pod5_train'
-xna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/reference/GAC_1F_7R.fasta'
-dna_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/240104_BSn_90mer_xr_train/20240104_1448_MN37138_ARV509_33c529d5/300_fast5_training'
-dna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/240104_BSn_90mer_xr_train/BS_90mer.fasta'
+working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/241127_GBG_Training/BA-Train' 
+xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/241114_GBG-CSC_90mer_xr_train/20241114_1355_MN41475_AWO394_fc4c9c6b/pod5_train'
+xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/241114_GBG-CSC_90mer_xr_train/reference/GBG_90mer_ref.fasta'
+dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/20240627_1621_MN37138_AUD804_5ac1717b/pod5'
+dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/240627_NTC_Phusion_xr_Train/reference/GAG_Ref_NTC.ref'
 
 ############################################################
 #Basecall paths
 
-bc_working_dir = '/home/xenolab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/241011_B18_B19_part1_bc/ST-Basecall'
-bc_fast5_dir = '/home/xenolab/DataAnalysis/Kaplan/raw/241011_B18_B19_Pol_Screen_1/20241011_1215_MN41475_AVY513_81500ab7/pod5'
-bc_xna_ref_fasta = '/home/xenolab/DataAnalysis/Kaplan/raw/241011_B18_B19_Pol_Screen_1/reference/B18_B19_ref.fasta'
-bc_model_file = '/home/xenolab/github/kaplanna/xemora/models/240930_NTC_Models/GBC-ST-model_best.pt'
+bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/XPCR/241126_B26-B27_Basecall/GBG-ST-Basecall'
+bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/241125_B26_B27_Seq_Context/20241125_1645_MN41475_AWF292_cfbb6444/pod5'
+bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/241125_B26_B27_Seq_Context/reference/B26_B27_ref.fasta'
+bc_model_file = '/home/marchandlab/github/kaplanna/xemora/models/240930_NTC_Models/GBG-ST-model_best.pt'
 #bc_model_file = working_dir+'/model/model_best.pt'
 
 
 ############################################################
-
 ############################################################
 train_model = False
 basecall_reads = True

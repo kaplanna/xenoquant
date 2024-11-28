@@ -79,7 +79,7 @@ def remove_duplicate_read_ids(all_read_ids):
 # Define the paths to the input files and output directory
 input_fastq_dir = "/Users/nickkaplan/xenobiocode/DataAnalysis/basecall/240830_B16_B17_Basecall/ST-Basecall/preprocess/fastq/pass"
 output_dir = "/Users/nickkaplan/xenobiocode/DataAnalysis/basecall/240830_B16_B17_Basecall/demux"
-barcode_file = "/Users/nickkaplan/github/xemora/post_processing/xpcr_barcodes.fasta"
+barcode_file = "/Users/nickkaplan/github/xemora/post_processing/xpcr_barcodes_B24_B25.fasta"
 merged_fastq = os.path.join(output_dir, "merged_input.fastq")
 
 os.makedirs(output_dir, exist_ok=True)
@@ -96,7 +96,7 @@ print('Merging completed.')
 
 # Parse the barcodes from the file
 forward_barcodes, reverse_barcodes = parse_barcodes(barcode_file)
-
+print(forward_barcodes)
 # Generate all forward-reverse barcode pairs
 barcode_pairs = generate_barcode_pairs(forward_barcodes, reverse_barcodes)
 
