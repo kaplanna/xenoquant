@@ -52,9 +52,9 @@ def generate_barcode_pairs(forward_barcodes, reverse_barcodes):
     return pairs
 
 # Define the paths to the input files and output directory
-input_fastq = "/home/xenolab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240930_NTC_Phusion_Training_Testing/240930_NTC_Phusion_Withheld_Test_Set/bc.bam"
-output_dir = "/home/xenolab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240930_NTC_Phusion_Training_Testing/240930_NTC_Phusion_Withheld_Test_Set/demux"
-barcode_file = "/home/xenolab/github/kaplanna/xemora/training_demux/NTC_barcodes_CA.fasta"
+input_fastq = "/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/240108_Testing_Set_Demux/bc.bam"
+output_dir = "/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/240108_Testing_Set_Demux/demux"
+barcode_file = "/home/marchandlab/github/kaplanna/xemora/archive/training_demux/GAA_CAT_barcodes_CA.fasta"
 
 os.makedirs(output_dir, exist_ok=True)
 

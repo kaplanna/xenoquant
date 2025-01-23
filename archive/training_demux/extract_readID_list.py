@@ -44,5 +44,5 @@ def extract_read_ids_per_fastq(working_dir):
                 except Exception as e:
                     print(f"Error processing {fastq_path}: {e}")
 
-working_dir = "/home/xenolab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240930_NTC_Phusion_Training_Testing/240930_NTC_Phusion_750_Training_Set/demux"
+working_dir = "/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/250108_Testing_Set_Demux/demux"
 extract_read_ids_per_fastq(working_dir)

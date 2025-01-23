@@ -17,16 +17,16 @@ import numpy as np
 
 
 #Standard basepairs written in 'purine pyrimidine' order
-standard_base_pairs = ['AT','GC']
+standard_base_pairs = ['AT','GC', 'NN']
 
 #Convert this to set
 standard_bases = np.concatenate(list(list(i) for i in standard_base_pairs))
 
 #Alternative basepairs written in 'purine pyrimidine' order
-xna_base_pairs = ['BS','PZ','JV','XK']
+xna_base_pairs = ['BS','PZ','JV','XK', 'DY']
 
 #Specify canonical base substitution desired for xFASTA generation here #changed to ST by NK
-confounding_pairs =  ['BA','ST','PG','ZC','JC','VG','XA','KG'] 
+confounding_pairs =  ['BA','ST','PG','ZC','JC','VG','XA','KG', 'DA', 'YT'] 
 
 #If XNAs are given different standard base substitutions, set them up as seperate (e.g, ['P','Z'])
 xna_segmentation_model_sets = ['B','S','PZ','JV','X', 'K', 'QW','ER']
@@ -82,6 +82,9 @@ sam_convert = True
 #Re-generate training or basecalling chunks.
 regenerate_chunks = True
 
+#Generate chunks using basecall anchor (default: False)
+bc_anchor = True
+
 #Merge chunks again for training data. 
 remerge_chunks = True
 
@@ -122,9 +125,9 @@ chunk_num = '500000'
 
 ############################################################
 #CutAdapt Demux parameters
-barcode_pair_csv = "./demux/barcode_files/B26-B27_bc.csv"
+barcode_pair_csv = "./demux/barcode_files/B32-B33.csv"
 error_rate = 0.20
-min_overlap = 18
+min_overlap = 14
 min_len = 120
 max_len = 200
 
@@ -134,7 +137,7 @@ max_len = 200
 overwrite_pod = True
 dorado_path = '~/dorado-0.8.0-linux-x64/bin/dorado'
 dorado_model = '~/dorado-0.8.0-linux-x64/models/dna_r10.4.1_e8.2_400bps_hac@v5.0.0'
-min_qscore = 7
+min_qscore = 5
 #Range of chunk context to use (in bp) for modified base training (default +/- 0) 
 mod_chunk_range = 0
 can_chunk_range = 0
@@ -151,8 +154,8 @@ max_can_reads = 0
 max_bc_reads = 0
 
 filter_mod_readIDs = ''#/home/xenolab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240930_NTC_Phusion_Training_Testing/240930_NTC_Phusion_750_Training_Set/demux/NB01_FWD_NB07_REV_read_ids.txt'
-filter_can_readIDs = ''#/home/marchandlab/DataAnalysis/Kaplan/raw/241114_GBG-CSC_90mer_xr_train/reference/NB02_FWD_NB08_REV_read_ids.txt'
-filter_readIDs_bc = ''#'/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/MODEL_TESTING/241018_Standard_Curve_Testing/test_set_quant/test_set_read_id_files/BA-Mixtures/mixed_20000_XNA_vs_0_DNA.txt'
+filter_can_readIDs = ''#'/home/marchandlab/DataAnalysis/Kaplan/raw/BS_xr/240627_NTC_Phusion_xr_Train/reference/NB04_FWD_NB09_REV_read_ids.txt'#/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/241212_Training_Set/demux/NB13_FWD_NB24_REV_read_ids.txt'
+filter_readIDs_bc = ''#/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/250108_Testing_Set_Demux/demux/NB13_FWD_NB24_REV_read_ids.txt'
 
 ############################################################
 # NanoPlot QC Analysis

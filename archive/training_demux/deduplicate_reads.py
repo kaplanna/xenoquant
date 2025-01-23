@@ -45,7 +45,7 @@ def remove_reads(demux_dir, read_ids_file):
         os.replace(temp_file, read_file)
 
 # Directories and file paths
-demux_dir = "/home/xenolab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240930_NTC_Phusion_Training_Testing/240930_NTC_Phusion_Withheld_Test_Set/demux"
+demux_dir = "/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/250108_Testing_Set_Demux/demux"
 output_common_reads = os.path.join(demux_dir, 'common_reads.txt')
 output_read_ids = os.path.join(demux_dir, 'read_ids.txt')
 
