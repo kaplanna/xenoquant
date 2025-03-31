@@ -288,53 +288,45 @@ def get_primary_alignments(bam_file):
     pysam.set_verbosity(1)
 
     return read_to_info
+
+
 #Step 4: Bed file generation 
 def bed_gen(input_fasta, xna_base, sub_base, chunk_range, chunk_shift): 
-    """
-    need to implement shift (maybe)
-    
-    bed_gen takes in an xFASTA file, xna base, a base to substitute with the 
-    xna base, region for analysis around focus, and shift from focus to generate 
-    a BED file with the region to perform Remora chunk generation on. 
-    
-    Parameters:
-    input_fasta - xFASTA file path 
-    xna_base - xna of interests, in xr_params 
-    sub_base - base to substitute
-    chunk_range - integer +/- around focus to analyze 
-    chunk_shift - integer with how many bases to move the focus region
-    
-    Returns:
-    output_bed - BED file pathway that is generated 
-    """
-    output_bed = os.path.join(os.path.dirname(input_fasta), xna_base+'.bed')
-    if os.stat(input_fasta).st_size == 0: 
-        print('Xemora  [ERROR] - Empty xfasta file generated. Check that XNA bases were present in sequence of input fasta file.')
+    output_bed = os.path.join(os.path.dirname(input_fasta), xna_base + '.bed')
+    if os.stat(input_fasta).st_size == 0:
+        print('Xemora  [ERROR] - Empty xfasta file generated.')
         sys.exit()
     else:
-        fr = open(output_bed,"w")
-        with open(os.path.expanduser(input_fasta), "r") as fo:
-            for line in fo: 
+        with open(output_bed, "w") as fr, open(input_fasta, "r") as fo:
+            for line in fo:
+                # only handle headers with +XPOS or something
+                if 'GAP' in line.upper():
+                    continue
+                if line.startswith('>'):
+                    header = line[1:].strip()  
+                    x_pos_base = fetch_xna_pos(header)  # e.g. [('P','65')]
 
-                if 'GAP' not in line.upper(): 
-                    if line[0]=='>':
-                        header = line[1:].replace('\n','')
-                        x_pos_base = fetch_xna_pos(header)
-                        x_pos_to_rc =[]
+                    for x in x_pos_base:
+                        x_base = x[0]                   # 'P'
+                        x_index_str = x[1].replace(']', '')  # '65' or '65-'
+                        x_index_str = x_index_str.replace('-', '')  # clean up trailing dash if present
+                        x_pos = int(x_index_str)
 
+                        # Only handle x_base == xna_base or complement
+                        if x_base == xna_base:
+                            strand = '+'
+                        elif x_base == xna_base_rc(xna_base, xna_base_pairs):
+                            strand = '-'
+                        else:
+                            # skip other XNAs entirely
+                            continue
 
-                        for x in x_pos_base: 
-                            x_base = x[0]
-                            x_pos = int(''.join(filter(str.isdigit, x[1])))
-
-                            if x_base == xna_base: 
-                                strand = '+'
-                            elif x_base == xna_base_rc(xna_base,xna_base_pairs): 
-                                strand ='-'
-                            bed_line = header+'\t'+str(x_pos-chunk_range+chunk_shift)+'\t'+str(int(x_pos)+chunk_range+1+chunk_shift)+'\t'+sub_base+'\t0\t'+strand+'\n'
-                            fr.write(bed_line)
-
+                        start = x_pos - chunk_range + chunk_shift
+                        end   = x_pos + chunk_range + 1 + chunk_shift
+                        bed_line = f"{header}\t{start}\t{end}\t{sub_base}\t0\t{strand}\n"
+                        fr.write(bed_line)
     return output_bed
+
 
 def generate_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_context, kmer_table_path, regenerate_chunks):
     """

@@ -121,15 +121,15 @@ val_proportion = '0.2'
 
 #Number of chunks for training (in thousands: e.g.: '200' = 200,000 chunks) 
 chunk_num = '500000'
+############################################################
 
 
 ############################################################
 #CutAdapt Demux parameters
-barcode_pair_csv = "./demux/barcode_files/B32-B33.csv"
 error_rate = 0.20
 min_overlap = 14
 min_len = 120
-max_len = 200
+max_len = 200 
 
 
 ############################################################
@@ -137,7 +137,7 @@ max_len = 200
 overwrite_pod = True
 dorado_path = '~/dorado-0.8.0-linux-x64/bin/dorado'
 dorado_model = '~/dorado-0.8.0-linux-x64/models/dna_r10.4.1_e8.2_400bps_hac@v5.0.0'
-min_qscore = 5
+min_qscore = 7
 #Range of chunk context to use (in bp) for modified base training (default +/- 0) 
 mod_chunk_range = 0
 can_chunk_range = 0
@@ -153,8 +153,8 @@ max_mod_reads = 0
 max_can_reads = 0
 max_bc_reads = 0
 
-filter_mod_readIDs = ''#/home/xenolab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/240930_NTC_Phusion_Training_Testing/240930_NTC_Phusion_750_Training_Set/demux/NB01_FWD_NB07_REV_read_ids.txt'
-filter_can_readIDs = ''#'/home/marchandlab/DataAnalysis/Kaplan/raw/BS_xr/240627_NTC_Phusion_xr_Train/reference/NB04_FWD_NB09_REV_read_ids.txt'#/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/241212_Training_Set/demux/NB13_FWD_NB24_REV_read_ids.txt'
+filter_mod_readIDs = ''
+filter_can_readIDs = ''
 filter_readIDs_bc = ''#/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/250108_Testing_Set_Demux/demux/NB13_FWD_NB24_REV_read_ids.txt'
 
 ############################################################
@@ -174,10 +174,7 @@ guppy_aligner_path = '~/ont-guppy/bin/guppy_aligner'
 #GPU enabled 
 device_type = 'cuda:all' 
 
-#Guppy q-score threshold for pass/fail 
-training_mod_min_qscore = 7
-training_can_min_qscore = 7
-basecall_min_qscore = 7
+
 
 #Config file 
 #guppy_config_file = 'dna_r9.4.1_450bps_hac.cfg'

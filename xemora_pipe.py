@@ -21,19 +21,21 @@ from lib.xr_params import *
 ############################################################
 #Training paths
 
-working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/' 
-xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/BS_xr/240925_GBA-TSC_anneal_xr_train/20240925_1500_MN37138_AUC702_eb4d5541/300_pod5_train'
-xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/BS_xr/240925_GBA-TSC_anneal_xr_train/reference/ref_GBA.fasta'
-dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/BS_xr/240627_NTC_Phusion_xr_Train/20240627_1621_MN37138_AUD804_5ac1717b/pod5'
-dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/BS_xr/240627_NTC_Phusion_xr_Train/reference/ref_Phusion_GBA.fasta'
+working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/PZ/250321_PZ_GC_Train/PG-Train_Q7' 
+xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/PZ/250320_PZ_NB25_xr_train/20250320_1728_MN37138_AYG540_9e16bdf9/pod5'
+xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/PZ/250320_PZ_NB25_xr_train/reference/ref_PZ_NB25.fasta'
+dna_fast5_dir = '//home/marchandlab/DataAnalysis/Kaplan/raw/PZ/240216_GC_71merPCR_xr_Train/20240216_1817_MN41475_ASE526_f9fc38c7/300_pod5_train'
+dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/PZ/240216_GC_71merPCR_xr_Train/reference/GC_71mer_xr_Train.fasta'
 
 ############################################################
 #Basecall paths
 
-bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/XPCR/250111_B32_B33_Nucleotide_Basecall/ST_Basecall'
-bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/250110_B32_B33_Nucleotide_Expmt_Rerun/20250110_1620_MN41475_AWI420_f963a31c/pod5'
-bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/250110_B32_B33_Nucleotide_Expmt_Rerun/reference/ref_B32_B33.fasta'
-bc_model_file = '/home/marchandlab/github/kaplanna/xemora/models/240930_NTC_Models/GBC-ST-model_best.pt'
+bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/250328_D3-D4_Basecall/PxT-Basecall'
+bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/250328_P2-3_D3-4/20250328_1752_MN41475_AYG661_b60398cb/pod5'
+bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/250328_P2-3_D3-4/reference/D3-4_P2-3/REF_D3-4_P2-3.fasta'
+barcode_pair_csv = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/250328_P2-3_D3-4/reference/D3-4_P2-3/DEMUX_D3-4_P2-3.csv'
+bc_model_file = '/home/marchandlab/github/kaplanna/xemora/models/241212_DsPx_Models/Ds-Px/G-Ds-A/Px-T-model_best.pt'
+
 #bc_model_file = working_dir+'/model/model_best.pt'
 
 
@@ -43,6 +45,7 @@ train_model = False
 basecall_reads = True
 output_alignment_results = True
 cutadapt_demux = True
+raw_basecall_analysis = False
 ############################################################
 #conda activate xemora-re
 
@@ -69,5 +72,11 @@ if output_alignment_results==True:
 #demux
 if cutadapt_demux==True: 
     demux_path = './lib/xr_demux.py'
-    cmd = f'python {demux_path} {bc_working_dir}'
+    cmd = f'python {demux_path} {bc_working_dir} {barcode_pair_csv}'
+    os.system(cmd)    
+    
+#raw basecall analysis
+if raw_basecall_analysis==True: 
+    raw_bc_path = './lib/xr_raw_basecall_analysis.py'
+    cmd = f'python {raw_bc_path} {bc_working_dir}'
     os.system(cmd)    

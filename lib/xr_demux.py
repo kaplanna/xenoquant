@@ -11,6 +11,7 @@ from xr_params import *
 
 print('Xemora [Status] - Initializing Xemora Demux.')
 working_dir = os.path.expanduser(sys.argv[1])
+barcode_pair_csv = os.path.expanduser(sys.argv[2])
 demux_dir = check_make_dir(os.path.join(working_dir, 'demux'))
 fastq_dir = check_make_dir(os.path.join(demux_dir, 'fastq'))
 mod_dir = os.path.join(working_dir,'preprocess')
@@ -69,18 +70,20 @@ def load_full_barcode_list(barcode_list):
 def map_barcode_pairs(pair_csv, barcode_dict):
     """
     Map barcode pairs from names to sequences using the full barcode list dictionary.
+    Also, extract the sample ID.
     
     Args:
-        pair_csv (str): Path to the CSV file with FWD_BARCODE and REV_BARCODE columns.
+        pair_csv (str): Path to the CSV file with SAMPLE_ID, FWD_BARCODE, and REV_BARCODE columns.
         barcode_dict (dict): Dictionary mapping BARCODE_NAME to BARCODE_SEQUENCE.
         
     Returns:
-        dict: A dictionary where keys are pair names and values are tuples of forward and reverse sequences.
+        dict: A dictionary where keys are pair names, values are tuples of (sample ID, forward sequence, reverse sequence).
     """
     barcode_pairs = {}
     with open(pair_csv, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
+            sample_id = row['SAMPLE_ID']
             fwd_name = row['FWD_BARCODE']
             rev_name = row['REV_BARCODE']
             pair_name = f"{fwd_name}_FWD_{rev_name}_REV"
@@ -88,23 +91,27 @@ def map_barcode_pairs(pair_csv, barcode_dict):
             rev_sequence = barcode_dict.get(rev_name)
             if not fwd_sequence or not rev_sequence:
                 raise ValueError(f"Barcode name {fwd_name} or {rev_name} not found in the full barcode list.")
-            barcode_pairs[pair_name] = (fwd_sequence, rev_sequence)
+            
+            barcode_pairs[pair_name] = (sample_id, fwd_sequence, rev_sequence)
     return barcode_pairs
 
 
-def extract_read_ids(fastq_file, barcode_pair, read_ids_list):
+
+def extract_read_ids(fastq_file, barcode_pair, sample_id, read_ids_list):
     with open(fastq_file, 'r') as infile:
         for line in infile:
             if line.startswith('@'):
                 read_id = line.split()[0][1:]  # Extract the read ID
-                read_ids_list.append([barcode_pair, read_id])
+                read_ids_list.append([sample_id, barcode_pair, read_id])
+
 
 def remove_duplicate_read_ids(all_read_ids):
-    read_id_counts = Counter(read_id for _, read_id in all_read_ids)
-    duplicates = [entry for entry in all_read_ids if read_id_counts[entry[1]] > 1]
-    unique_entries = [entry for entry in all_read_ids if read_id_counts[entry[1]] == 1]
+    read_id_counts = Counter(read_id for _, _, read_id in all_read_ids)
+    duplicates = [entry for entry in all_read_ids if read_id_counts[entry[2]] > 1]
+    unique_entries = [entry for entry in all_read_ids if read_id_counts[entry[2]] == 1]
     print(f"Number of read IDs found in multiple files: {len(duplicates)}")
     return unique_entries
+
 
 # Load the per-read modifications file
 def load_per_read_modifications(file_path):
@@ -137,7 +144,7 @@ barcode_pairs = map_barcode_pairs(barcode_pair_csv, barcode_dict)
 all_read_ids = []
 
 # Process the BAM file with each barcode pair
-for barcode_pair, (barcode1, barcode2) in barcode_pairs.items():
+for barcode_pair, (sample_id, barcode1, barcode2) in barcode_pairs.items():
     barcode2_rc = reverse_complement(barcode2)
     barcode1_rc = reverse_complement(barcode1)
     combined_adapter1 = f'{barcode1}...{barcode2_rc}'
@@ -157,17 +164,30 @@ for barcode_pair, (barcode1, barcode2) in barcode_pairs.items():
     print(f'Combining and deduplicating output for barcode pair: {barcode_pair}')
     combine_and_deduplicate_fastq(output_file1, output_file2, dedup_output)
 
-    # Extract read IDs and append to the list
-    extract_read_ids(dedup_output, barcode_pair, all_read_ids)
+    # Extract read IDs and append to the list (NOW INCLUDING SAMPLE ID)
+    extract_read_ids(dedup_output, barcode_pair, sample_id, all_read_ids)
 
     # Delete the non-deduplicated files
     os.remove(output_file1)
     os.remove(output_file2)
 
 # Create a function to aggregate results by barcode pair
-def calculate_overall_results(merged_df):
-    # Group by barcode_pair and count total alignments
-    results = merged_df.groupby('barcode_pair').agg(
+def calculate_overall_results(merged_df, barcode_pairs):
+    """
+    Calculate overall results grouped by sample ID and barcode pair.
+    
+    Args:
+        merged_df (DataFrame): Merged DataFrame with barcode pair and read classifications.
+        barcode_pairs (dict): Dictionary with barcode pairs and their corresponding sample IDs.
+        
+    Returns:
+        DataFrame: Aggregated results including sample ID, barcode pair, and classification counts.
+    """
+    # Add sample ID column by mapping from barcode_pairs dictionary
+    merged_df['sample_id'] = merged_df['barcode_pair'].map(lambda x: barcode_pairs.get(x, ('Unknown',))[0])
+
+    # Group by sample ID and barcode pair
+    results = merged_df.groupby(['sample_id', 'barcode_pair']).agg(
         Total_Reads=('read_id', 'size'),
         Number_of_1s=('class_pred', lambda x: (x == 1).sum()),
         Number_of_0s=('class_pred', lambda x: (x == 0).sum())
@@ -178,6 +198,7 @@ def calculate_overall_results(merged_df):
     results['Percentage_0'] = (results['Number_of_0s'] / results['Total_Reads']) * 100
 
     return results
+
 
 # Save the aggregated results to a CSV file
 def save_overall_results(results_df, output_file):
@@ -191,8 +212,9 @@ all_read_ids = remove_duplicate_read_ids(all_read_ids)
 read_ids_csv = os.path.join(demux_dir, 'all_read_ids.csv')
 with open(read_ids_csv, 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
-    writer.writerow(["barcode_pair", "read_id"])
+    writer.writerow(["sample_id", "barcode_pair", "read_id"])  # Updated header
     writer.writerows(all_read_ids)
+
 
 
 print('Xemora [Status]: Cutadapt processing, deduplication, read ID extraction, duplicate removal, and cleanup completed for all barcode pairs.')
@@ -211,10 +233,11 @@ save_merged_output(merged_df, output_file)
 
 print(f'Merged modifications and read IDs saved to {output_file}')
 
-overall_results = calculate_overall_results(merged_df)
+overall_results = calculate_overall_results(merged_df, barcode_pairs)
 
 # Save the overall results to a CSV file
 overall_results_file = os.path.join(demux_dir, 'overall_demux_results.csv')
 save_overall_results(overall_results, overall_results_file)
 
 print(f'Overall results saved to {overall_results_file}')
+
