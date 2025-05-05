@@ -59,7 +59,7 @@ regenerate_bam = True
 #Converting BAM files for data correction 
 bam_convert = False
 
-#Merge fail bam ?
+#Merge fail bam 
 merge_fail = False
 
 #convert bam files to fasta for troubleshooting- NOTE: use xemora-re env
@@ -105,10 +105,10 @@ ml_model_path = 'models/ConvLSTM_w_ref.py'
 
 
 #Modified base in Fasta sequence you wish to train model or use model to basecall
-mod_base = 'S'
+mod_base = 'B'
 
 #Most similar substituted canonical base you will be comparing against 
-can_base = 'T'
+can_base = 'A'
 
 #Extent of Kmer content (-,+) to store for model training
 kmer_context ='4 4' 
@@ -121,6 +121,9 @@ val_proportion = '0.2'
 
 #Number of chunks for training (in thousands: e.g.: '200' = 200,000 chunks) 
 chunk_num = '500000'
+
+
+
 ############################################################
 
 
@@ -155,7 +158,7 @@ max_bc_reads = 0
 
 filter_mod_readIDs = ''
 filter_can_readIDs = ''
-filter_readIDs_bc = ''#/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/250108_Testing_Set_Demux/demux/NB13_FWD_NB24_REV_read_ids.txt'
+filter_readIDs_bc = ''
 
 ############################################################
 # NanoPlot QC Analysis

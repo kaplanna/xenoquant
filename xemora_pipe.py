@@ -21,20 +21,20 @@ from lib.xr_params import *
 ############################################################
 #Training paths
 
-working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/PZ/250321_PZ_GC_Train/PG-Train_Q7' 
-xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/PZ/250320_PZ_NB25_xr_train/20250320_1728_MN37138_AYG540_9e16bdf9/pod5'
-xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/PZ/250320_PZ_NB25_xr_train/reference/ref_PZ_NB25.fasta'
-dna_fast5_dir = '//home/marchandlab/DataAnalysis/Kaplan/raw/PZ/240216_GC_71merPCR_xr_Train/20240216_1817_MN41475_ASE526_f9fc38c7/300_pod5_train'
-dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/PZ/240216_GC_71merPCR_xr_Train/reference/GC_71mer_xr_Train.fasta'
+working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/CBG_xr_train/ST-Train'
+xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/BS_xr/250408_CBG_xr_train/20250408_1529_MN37138_AYZ259_99a19ebc/400_pod5_train'
+xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/BS_xr/250408_CBG_xr_train/reference/ref_CBG.fasta'
+dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/BS_xr/250408_CAG_xr_train/20250408_1541_MN41475_AYS317_7e48efeb/2_pod5_train'
+dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/BS_xr/250408_CAG_xr_train/20250408_1541_MN41475_AYS317_7e48efeb/reference/ref_CAG.fasta'
 
 ############################################################
 #Basecall paths
 
-bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/250328_D3-D4_Basecall/PxT-Basecall'
-bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/250328_P2-3_D3-4/20250328_1752_MN41475_AYG661_b60398cb/pod5'
-bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/250328_P2-3_D3-4/reference/D3-4_P2-3/REF_D3-4_P2-3.fasta'
-barcode_pair_csv = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/250328_P2-3_D3-4/reference/D3-4_P2-3/DEMUX_D3-4_P2-3.csv'
-bc_model_file = '/home/marchandlab/github/kaplanna/xemora/models/241212_DsPx_Models/Ds-Px/G-Ds-A/Px-T-model_best.pt'
+bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/BSn/XPCR/250504_B13_Basecall/BA-Basecall'
+bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/240816_B13_pH_Rerun_2/20240816_1605_MN41475_AUB839_d3996fad/pod5'
+bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/240816_B13_pH_Rerun_2/reference/B13.fasta'
+barcode_pair_csv = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/240816_B13_pH_Rerun_2/reference/DEMUX_B13.csv'
+bc_model_file = '/home/marchandlab/github/kaplanna/xemora/models/240930_NTC_Models/GBC-BA-model_best.pt'
 
 #bc_model_file = working_dir+'/model/model_best.pt'
 

@@ -41,8 +41,7 @@ def read_data_files(base_path):
                                 'flag', 'ref_start_pos', 'cigar_string', 'ref_length', 'basecalled_sequence', 'q_score']
     return df_modifications
 
-# Process the data (now using reference_sequence instead of sequencing_summary)
-def process_data(df_modifications, alignment):
+def process_data(df_modifications, alignment, max_reads=5000):
     filtered_rows = df_modifications[df_modifications['reference_sequence'] == alignment]
     
     # Extract class probabilities
@@ -51,10 +50,16 @@ def process_data(df_modifications, alignment):
     
     # Ensure class_pred is cast as integer
     filtered_rows['class_pred'] = pd.to_numeric(filtered_rows['class_pred'], errors='coerce').fillna(0).astype(int)
-    
+
     # Retain required columns
     output_df = filtered_rows[['read_id', 'class_pred', 'class_0_probs', 'class_1_probs']].drop_duplicates(subset='read_id')
+
+    # Optional: trim to max_reads
+    if max_reads is not None:
+        output_df = output_df.head(max_reads)
+
     return output_df
+
 
 # Calculate counts and percentages for each alignment
 def calculate_results(output_df, alignment):

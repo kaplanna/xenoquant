@@ -440,6 +440,10 @@ def add_per_read_mapping(primary_alignments, per_read_modifications):
     df.to_csv(per_read_modifications, sep='\t', index=False)
 
     return per_read_modifications
+    
+    
+
+
 
 def main():
     """
@@ -480,6 +484,7 @@ def main():
     #Generate chunk files to analyze 
     basecalling_chunks = generate_chunks(merged_pod5, aligned_bam, chunk_dir, bed_file, mod_base, kmer_context, kmer_table_path, regenerate_chunks)
     
+
     #Run Xemora validate
     per_read_mod, summary_mod = xemora_basecall(working_dir, basecalling_chunks, model_file)
     per_read_mod = add_per_read_mapping(primary_alignments, per_read_mod)
