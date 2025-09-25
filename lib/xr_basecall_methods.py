@@ -212,7 +212,7 @@ def minimap2_aligner(input_bam, xfasta_path, bam_directory):
     aligned_bam - minimap2 aligned bam file 
     """
     aligned_bam = os.path.join(bam_directory, 'aligned.BAM')
-    cmd = 'samtools fastq -T "*" '+input_bam+ ' | minimap2 -y -ax map-ont --score-N 0 --secondary no --sam-hit-only --MD '+xfasta_path+ ' - | samtools view -F0x800 -bho ' +aligned_bam
+    cmd = 'samtools fastq -T "*" '+input_bam+ ' | minimap2 -y -ax map-ont -k8 -w5 -s 80 --score-N 0 --secondary no --sam-hit-only --MD '+xfasta_path+ ' - | samtools view -F0x800 -bho ' +aligned_bam
     os.system(cmd)
     
     return aligned_bam
@@ -471,6 +471,7 @@ def main():
     if basecall_pod == True:
         bc_bam = dorado_basecall(dorado_path, dorado_model, min_qscore, merged_pod5, mod_bam_dir, basecall_pod, max_bc_reads, filter_readIDs_bc)
     else:
+        bc_bam = os.path.join(mod_bam_dir, "bc.bam")
         print('[STATUS] Skipping Dorado Basecall')
     #Align using minimap2 
     aligned_bam = minimap2_aligner(bc_bam, xfasta_file, mod_bam_dir)

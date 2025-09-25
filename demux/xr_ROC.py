@@ -5,11 +5,11 @@ import os
 
 # Load the BA and ST results TSV files with the correct delimiter
 BA_results_df = pd.read_csv(
-    '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/250214_D1_Basecall/DsA-Basecall/demux/demux_per-read_modifications.tsv',
+    '/home/marchandlab/DataAnalysis/Kaplan/basecall/DsPx/250904_D12_Basecall/DsN-Basecall/demux/demux_per-read_modifications.tsv',
     sep='\t'
 )
 ST_results_df = pd.read_csv(
-    '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/250214_D1_Basecall/PxT-Basecall/demux/demux_per-read_modifications.tsv',
+    '/home/marchandlab/DataAnalysis/Kaplan/basecall/DsPx/250904_D12_Basecall/PxN-Basecall/demux/demux_per-read_modifications.tsv',
     sep='\t'
 )
 # Specify the output directory for saving the plot
@@ -28,8 +28,8 @@ ST_results_df['class_1_prob'] = ST_results_df['class_probs'].str.split(',').str[
 
 # Assign ground truth labels
 ground_truth_map = {
-    'NB12_FWD_NB20_REV': 0,
-    'NB25_FWD_None_REV': 1
+    'NB12_FWD_NB31_REV': 0,
+    'None_FWD_NB30_REV': 1
 }
 
 BA_results_df['ground_truth'] = BA_results_df['barcode_pair'].map(ground_truth_map)
@@ -51,11 +51,11 @@ roc_auc_st = roc_auc_score(ST_results_df['ground_truth'], ST_results_df['class_1
 plt.figure(figsize=(3, 3), dpi=300)  # Smaller figure size with high resolution
 plt.plot(
     fpr_ba, tpr_ba, color='#375EDB', lw=1, 
-    label=f'Ds-A ROC (AUC = {roc_auc_ba:.2f})'
+    label=f'Ds-N ROC (AUC = {roc_auc_ba:.2f})'
 )  # Thin line for BA
 plt.plot(
     fpr_st, tpr_st, color='#31DE80', lw=1, 
-    label=f'Px-T ROC (AUC = {roc_auc_st:.2f})'
+    label=f'Px-N ROC (AUC = {roc_auc_st:.2f})'
 )  # Thin line for ST
 plt.plot([0, 1], [0, 1], color='black', lw=0.5, linestyle='--')  # Thinner diagonal line
 

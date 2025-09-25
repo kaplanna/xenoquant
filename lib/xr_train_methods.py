@@ -201,15 +201,16 @@ def minimap2_aligner(input_bam, xfasta_path, bam_directory):
     aligned_bam - minimap2 aligned bam file 
     """
     aligned_bam = os.path.join(bam_directory, 'aligned.BAM')
-    cmd = 'samtools fastq -T "*" '+input_bam+ ' | minimap2 -y -ax map-ont --score-N 0 --secondary no --sam-hit-only --MD '+xfasta_path+ ' - | samtools view -F0x800 -bho ' +aligned_bam
+    cmd = 'samtools fastq -T "*" '+input_bam+ ' | minimap2 -y -ax map-ont -k8 -w5 -s 80 --score-N 0 --secondary no --sam-hit-only --MD '+xfasta_path+ ' - | samtools view -F0x800 -bho ' +aligned_bam
     os.system(cmd)
     
     return aligned_bam
 
 # Step 4: Bed file generation 
-def bed_gen(input_fasta, xna_base, sub_base, chunk_range, chunk_shift): 
+def bed_gen(input_fasta, xna_base, sub_base, chunk_range, chunk_shift):
     """
     Generates a BED file specifying the regions to focus on during chunk generation.
+    Optionally filters by reference name if `bed_filtering` is enabled.
 
     Parameters:
     input_fasta (str): xFASTA file path.
@@ -221,32 +222,36 @@ def bed_gen(input_fasta, xna_base, sub_base, chunk_range, chunk_shift):
     Returns:
     str: File path to the generated BED file.
     """
-    output_bed = os.path.join(os.path.dirname(input_fasta), sub_base+'.bed')
-    if os.stat(input_fasta).st_size == 0: 
+    output_bed = os.path.join(os.path.dirname(input_fasta), sub_base + '.bed')
+    if os.stat(input_fasta).st_size == 0:
         print('Xemora  [ERROR] - Empty xfasta file generated. Check that XNA bases were present in sequence of input fasta file.')
         sys.exit()
     else:
-        fr = open(output_bed,"w")
-        with open(os.path.expanduser(input_fasta), "r") as fo:
-            for line in fo: 
-                if 'GAP' not in line.upper(): 
-                    if line[0]=='>':
-                        header = line[1:].replace('\n','')
-                        x_pos_base = fetch_xna_pos(header)
-                        x_pos_to_rc =[]
+        with open(output_bed, "w") as fr, open(os.path.expanduser(input_fasta), "r") as fo:
+            for line in fo:
+                if 'GAP' not in line.upper():
+                    if line.startswith('>'):
+                        header = line[1:].strip()
+                        
+                        # Skip if filtering is enabled and header doesn't match allowed
+                        if bed_filtering:
+                            if sub_base == mod_base and header != mod_alignment:
+                                continue
+                            if sub_base == can_base and header != can_alignment:
+                                continue
 
-                        for x in x_pos_base: 
+                        x_pos_base = fetch_xna_pos(header)
+
+                        for x in x_pos_base:
                             x_base = x[0]
                             x_pos = int(''.join(filter(str.isdigit, x[1])))
 
-                            if x_base == xna_base: 
-                                strand = '+'
-                            elif x_base == xna_base_rc(xna_base,xna_base_pairs): 
-                                strand ='-'
-                            bed_line = header+'\t'+str(x_pos-chunk_range+chunk_shift)+'\t'+str(int(x_pos)+chunk_range+1+chunk_shift)+'\t'+sub_base+'\t0\t'+strand+'\n'
+                            strand = '+' if x_base == xna_base else '-'
+                            bed_line = f"{header}\t{x_pos - chunk_range + chunk_shift}\t{x_pos + chunk_range + 1 + chunk_shift}\t{sub_base}\t0\t{strand}\n"
                             fr.write(bed_line)
 
     return output_bed
+
 
 def generate_mod_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_context, kmer_table_path, regenerate_chunks):
     """
@@ -397,16 +402,77 @@ def xemora_training(model_dir, training_chunks):
 
     return model_path, val_log_path
 
-def gen_confmat(val_log_path, output_dir):
-    """
-    Generates confusion matrices from the validation log.
 
-    Parameters:
-    val_log_path (str): File path to the validation log.
-    output_dir (str): Directory to save the confusion matrices.
+def run_remora_ref_region_plot(
+    can_pod5, can_bam,
+    mod_pod5, mod_bam,
+    ref_bed,
+    highlight_bed,
+    levels_table,
+    out_dir,
+    prefix="ref_region",
+    log_name="ref_region.log"
+):
     """
-    cmd = 'python xr_confmat.py '+val_log_path+' '+output_dir
-    os.system(cmd)
+    Generate Remora ref_region plots (Remora 2.1 style).
+
+    Parameters
+    ----------
+    can_pod5 : str
+        Path to canonical pod5 file
+    can_bam : str
+        Path to canonical aligned bam file
+    mod_pod5 : str
+        Path to modified pod5 file
+    mod_bam : str
+        Path to modified aligned bam file
+    ref_bed : str
+        BED file with ref regions to plot
+    highlight_bed : str
+        BED file with highlight regions (optional, can be same as ref_bed)
+    levels_table : str
+        Path to k-mer levels table
+    out_dir : str
+        Directory to save plots
+    prefix : str
+        Prefix for output files
+    log_name : str
+        Name of log file
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    cwd = os.getcwd()
+    try:
+        # Resolve absolute paths
+        ref_bed = os.path.abspath(os.path.expanduser(ref_bed))
+        highlight_bed = os.path.abspath(os.path.expanduser(highlight_bed))
+        levels_table = os.path.abspath(os.path.expanduser(levels_table))
+
+        if not os.path.exists(levels_table):
+            raise FileNotFoundError(f"[ERROR] k-mer levels table not found: {levels_table}")
+
+        os.chdir(out_dir)
+
+        # Build the Remora command
+        cmd = (
+            f"remora analyze plot ref_region "
+            f"--pod5-and-bam {can_pod5} {can_bam} "
+            f"--pod5-and-bam {mod_pod5} {mod_bam} "
+            f"--ref-regions {ref_bed} "
+            f"--highlight-ranges {highlight_bed} "
+            f"--refine-kmer-level-table {levels_table} "
+            f"--refine-rough-rescale "
+            f"--prefix {prefix} "
+            f"--log-filename {log_name}"
+        )
+        print(f"[DEBUG] Running Remora ref_region plot:\n{cmd}")
+        rc = os.system(cmd)
+        if rc != 0:
+            raise RuntimeError(f"Remora ref_region plotting failed with code {rc}")
+        print(f"Xemora [STATUS] - Remora ref_region plots written to {out_dir}")
+    finally:
+        os.chdir(cwd)
+
+
 
 def main():
     '''
@@ -454,7 +520,9 @@ def main():
 
     # Step 3: Generate BED file for region to analyze 
     mod_bed_file = bed_gen(mod_xfasta, mod_base, mod_base, mod_chunk_range, mod_chunk_shift)
-    can_bed_file = bed_gen(can_xfasta, mod_base, can_base, can_chunk_range, can_chunk_shift) # Can shift and range variables don't exist yet, ask Jorge if useful for single-context training 
+    can_bed_file = bed_gen(can_xfasta, mod_base, can_base, can_chunk_range, can_chunk_shift)
+
+
 
     # Step 4: Generate Remora chunks
     mod_chunk_path = generate_mod_chunks(mod_merged_pod5, mod_aligned_bam, chunk_dir, mod_bed_file, mod_base, kmer_context, kmer_table_path, regenerate_chunks)
@@ -467,10 +535,8 @@ def main():
     # Step 6: Train Xemora model
     model_path, validation_log_path = xemora_training(model_dir, training_chunk_path)
 
-    # Step 7 (Optional): Generate Confusion Matrices from validation.log
-    #if generate_confusion_matrices:
-        #confmat_dir = check_make_dir(os.path.join(working_dir, 'confusion_matrices'))
-        #gen_confmat(validation_log_path, confmat_dir)
+
+
 
 if __name__ == "__main__":
     main()

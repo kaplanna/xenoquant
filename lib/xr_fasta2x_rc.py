@@ -1,183 +1,163 @@
 ########################################################################
 ########################################################################
 """
-xm_fasta2x_rc.py 
+xr_fasta2x_rc.py 
 
 Title: Unpublished work
 
-By: H. Kawabe, N. Kaplan, J. A. Marchand
+Convert FASTA to xFASTA format for XNA base training. 
+Handles substitution of modified bases with canonical confounding bases
+and generates reverse-complement FASTAs when needed.
 
-Updated: 3/2/23
+By: H. Kawabe, N. Kaplan, J. A. Marchand
+Updated: 09/22/25
 """
 ########################################################################
 ########################################################################
 
-from xr_params import *
 import sys
-import numpy as np
-from xr_tools import *
-from Bio.Seq import Seq
 import os
+from Bio.Seq import Seq
+from xr_params import *
+from xr_tools import fetch_xna_pos
+
+########################################################################
+print("Xemora [Status] - Initializing Xemora...")
+
+# Helpers
+########################################################################
+
+def get_confounding_base(base, mod_base, can_base):
+    """Return canonical substitute for modified base, or original base if not modified."""
+    return can_base if base == mod_base else base
+
+def get_xna_rc(base, xna_pairs):
+    """Return reverse complement for an XNA base using the xna_base_pairs list."""
+    for pair in xna_pairs:
+        if base == pair[0]:
+            return pair[1]
+        elif base == pair[1]:
+            return pair[0]
+    # Default DNA complements
+    dna_rc = {"A":"T","T":"A","G":"C","C":"G","N":"N"}
+    return dna_rc.get(base, base)
 
 
+########################################################################
+# Input / Output
+########################################################################
 
+if len(sys.argv) != 3:
+    sys.exit("[xFASTA] Usage: python xr_fasta2x_rc.py <input.fasta> <output.fasta>")
 
-#Input fasta 
-input_fasta=sys.argv[1]
+input_fasta = sys.argv[1]
+output_fasta = sys.argv[2]
 
-#Output xfasta
-output_fasta=sys.argv[2]
-
-
-#Optional confounding pair override
-if len(sys.argv)==5: 
-    conf_bases = sys.argv[3]
-    xna_bases = sys.argv[4]
-    confounding_pairs = [xna_bases[0]+conf_bases[0], xna_bases[1]+conf_bases[1]]
-    print('[xFASTA] - Overriding xm_params.py. Using '+confounding_pairs[0]+' and '+confounding_pairs[1])
-
-
-#Create writable output file
-f = open(output_fasta, "w")
-detected_xfasta_header = False 
+detected_xfasta_header = False
 detected_xna = False
 require_rc_fasta = False
 
-with open(input_fasta, "r") as fh:
-    for line in fh:
-    
-        #Get header
-        if line[0]=='>':
-            header = line
-            if 'XPOS[' in header: 
-                detected_xfasta_header=True
-            
-        #Get sequence
-        if line[0]!='>':
-        
-            #Make all upper case
-            uline = line.upper()
-            
-            #Look for non-standard base
-            diff = list(set(uline.replace('\n',''))-(set(standard_bases)))
-            
-            #This sequence contains an XNA
-            if len(diff)>0:
-            
-                #Set up a clean fasta sequence 
-                uline_gap = uline #Null position
-                
-                #Get position of each XNA
-                for x in range(0,len(diff)):
+########################################################################
+# Conversion
+########################################################################
 
+with open(output_fasta, "w") as fout, open(input_fasta, "r") as fin:
+    for line in fin:
+        if line.startswith(">"):
+            header = line.strip()
+            if "XPOS[" in header:
+                detected_xfasta_header = True
+        else:
+            seq = line.strip().upper()
 
-                    #Location of every modification 
-                    x_loc=[i for i in range(len(uline)) if uline.startswith(diff[x], i)]
-                    
-                    #Subject XNA base detected 
-                    xna_base = diff[x]
-                    #Get base for segmentation substiution 
-                    substitution_base = xna_base_rc(xna_base, confounding_pairs)
+            # Detect non-standard bases
+            diff = list(set(seq) - set(standard_bases))
+            if len(diff) > 0:
+                # Handle each XNA type found in sequence
+                for xna_base in diff:
+                    x_locs = [i for i, c in enumerate(seq) if c == xna_base]
 
+                    # Substitution with canonical base
+                    substitution_base = get_confounding_base(xna_base, mod_base, can_base)
 
-                    #If conjugate base requires a different segmentation model
-                    if xna_base_rc(xna_base,xna_segmentation_model_sets)==False: 
-                        require_rc_fasta=True
+                    # Track if this requires RC fasta (segmentation-specific bases)
+                    if xna_base in xna_segmentation_model_sets:
+                        require_rc_fasta = True
 
+                    # Prepare header
+                    header_x = header + "+XPOS[" + "".join(f"{xna_base}:{pos}-" for pos in x_locs)
+                    header_x = header_x[:-1] + "]\n"
 
-                    #Setup output header - 
-                    header_x = header.replace('\n','')+'+XPOS['
-                    uline_clean = uline #Standard base set
+                    # Prepare substituted sequence
+                    clean_seq = seq.replace(xna_base, substitution_base)
 
+                    fout.write(header_x)
+                    fout.write(clean_seq + "\n")
 
-                    #At every modification position 
-                    for xi in x_loc:
-                        posx=diff[x]+':'+str(xi)+'-'
-                        header_x = header_x+posx
-                        uline_clean = uline_clean.replace(diff[x],substitution_base)
-                        uline_gap = uline_gap.replace(diff[x],'-')
-                        detected_xna = True 
+                    if write_gaps:
+                        gap_header = header + "+-+_GAP[]\n"
+                        gap_seq = seq.replace(xna_base, "-").replace("-", "")
+                        fout.write(gap_header)
+                        fout.write(gap_seq + "\n")
 
-                    #Close and write 
-                    header_xw=header_x[:-1]+']\n'
-                    f.write(header_xw)
-                    f.write(uline_clean)
+                detected_xna = True
 
-                    if write_gaps==True: 
-                        header_gap = header.replace('\n','')+'+-+_GAP[]\n'
-                        uline_gap = uline #Standard base set
-                        for xi in x_loc:
-                            uline_gap = uline_gap.replace(diff[x],'-')
-                        f.write(header_gap)
-                        f.write(uline_gap.replace('-',''))
-            elif len(diff)==0 and write_no_xna_seq==True: 
-                f.write(header)
-                f.write(uline)
-f.close()
+            elif len(diff) == 0 and write_no_xna_seq:
+                fout.write(header + "\n")
+                fout.write(seq + "\n")
 
+########################################################################
+# Reverse complement FASTA (if needed)
+########################################################################
 
+if require_rc_fasta:
+    if output_fasta.endswith(".fasta"):
+        rc_name = output_fasta[:-6] + "_rc.fasta"
+    elif output_fasta.endswith(".fa"):
+        rc_name = output_fasta[:-3] + "_rc.fa"
+    else:
+        rc_name = output_fasta + "_rc.fa"
 
-
-if require_rc_fasta == True: 
-    fr = open(output_fasta.replace('.fa','_rc')+'.fa', "w")
-    with open(output_fasta, "r") as fo:
-        for line in fo: 
-            if line[0]=='>' and 'GAP' not in line:
-                header = line
+    with open(rc_name, "w") as frc, open(output_fasta, "r") as fo:
+        x_pos_to_rc = []
+        for line in fo:
+            if line.startswith(">") and "GAP" not in line:
+                header = line.strip()
                 x_pos_base = fetch_xna_pos(header)
-                x_pos_to_rc =[]
-                for x in x_pos_base: 
-                    x_base = x[0]
-                    x_pos = x[1]
+                x_pos_to_rc = [[x[0], x[1].replace("]", "")] for x in x_pos_base]
 
-
-                    if xna_base_rc(x_base,xna_segmentation_model_sets)==False: 
-                        xpr = [x_base, x_pos.replace(']','')]
-                        x_pos_to_rc.append(xpr) 
-
-            if line[0]!='>' and len(x_pos_to_rc)>0:
-
-                #Setup header
-                header_rc = header[0:header.find('+XPOS[')]+'+RC+XPOS['
-                #Get sequence
-                seq = line
-                #Take RC
+            elif not line.startswith(">") and x_pos_to_rc:
+                seq = line.strip()
                 seq_rc = str(Seq(seq).reverse_complement())
-                #Get Length
-                seq_len = len(seq_rc) 
+                seq_len = len(seq_rc)
 
+                header_rc = header.split("+XPOS[")[0] + "+RC+XPOS["
 
+                for base, pos in x_pos_to_rc:
+                    rc_base = get_xna_rc(base, xna_base_pairs)
+                    rc_sub = get_confounding_base(rc_base, mod_base, can_base)
+                    rc_pos = seq_len - int(pos) - 1
+                    seq_rc = seq_rc[:rc_pos] + rc_sub + seq_rc[rc_pos+1:]
+                    header_rc += f"{rc_base}:{rc_pos-1}-"
 
-                for x in x_pos_to_rc: 
-                    x_base_rc=xna_base_rc(x[0],xna_base_pairs)
-                    x_base_rc_sub=xna_base_rc(x_base_rc,confounding_pairs)
-                    x_base_rc_pos = seq_len-int(x[1])-1
-                    seq_rc = seq_rc[0:x_base_rc_pos]+x_base_rc_sub+seq_rc[x_base_rc_pos+1:]
-                    header_rc=header_rc+x_base_rc+':'+str(x_base_rc_pos-1)+'-'
-                    
-
-                #Close and write
-                header_rc=header_rc[:-1]+']'
-                fr.write(header_rc)
-                fr.write(seq_rc+'\n')
-    fr.close()
-else: 
-    try: 
-        rmv = output_fasta.replace('.fa','_rc')+'.fa'
+                header_rc = header_rc[:-1] + "]\n"
+                frc.write(header_rc)
+                frc.write(seq_rc + "\n")
+else:
+    try:
+        rmv = output_fasta.replace(".fa", "_rc") + ".fa"
         os.remove(rmv)
-    except: 
-        require_rc_fasta = False
+    except:
+        pass
 
+########################################################################
+# Sanity checks
+########################################################################
 
-                    
-                    
-
-
-if detected_xfasta_header == True: 
-    print('Xenomorph Status - [Error] Fasta input file already in xfasta format')
-    fasta_input_error=True 
-else: 
-    if detected_xna == False: 
-        print('Xenomorph Status - [Error] No XNAs (BS/PZ/KX/JV/XY) detected in fasta input sequence.')
-        fasta_input_error=True 
+if detected_xfasta_header:
+    print("Xenomorph Status - [Error] Fasta input file already in xfasta format")
+elif not detected_xna:
+    print("Xenomorph Status - [Error] No XNAs detected in fasta input sequence.")
+else:
+    print("[xFASTA] Conversion complete.")
 

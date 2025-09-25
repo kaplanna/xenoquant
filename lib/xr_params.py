@@ -25,14 +25,16 @@ standard_bases = np.concatenate(list(list(i) for i in standard_base_pairs))
 #Alternative basepairs written in 'purine pyrimidine' order
 xna_base_pairs = ['BS','PZ','JV','XK', 'DY']
 
-#Specify canonical base substitution desired for xFASTA generation here #changed to ST by NK
-confounding_pairs =  ['BA','ST','PG','ZC','JC','VG','XA','KG', 'DA', 'YT'] 
+
+
 
 #If XNAs are given different standard base substitutions, set them up as seperate (e.g, ['P','Z'])
-xna_segmentation_model_sets = ['B','S','PZ','JV','X', 'K', 'QW','ER']
+xna_segmentation_model_sets = ['B','S','P','Z','JV','X', 'K', 'QW','ER']
 
 #Possible XNA bases
 xna_bases = np.concatenate(list(list(i) for i in xna_base_pairs))
+
+require_rc_fasta = True
 
 
 ######################XFASTA GENERATION######################
@@ -65,10 +67,7 @@ merge_fail = False
 #convert bam files to fasta for troubleshooting- NOTE: use xemora-re env
 bam_to_fasta = False
 
-#Filtering bed files by reference sequence - only use if training on mixed data sets
-bed_filtering = False
-mod_alignment = "TSC_Extended+XPOS[B:105]"
-can_alignment = "TTC_4F_9R+XPOS[B:75]"
+
 
 #Data extraction, filtering, and heptamer correction 
 data_fix = True
@@ -91,6 +90,14 @@ remerge_chunks = True
 #Build model using Remora 
 gen_model = True
 ############################################################
+# ---------------- Normalization switches ----------------
+# Dataset/Training
+USE_KMER_REFINE       = False   # True -> add --refine-kmer-level-table <kmer_table_path>
+USE_ROUGH_RESCALE     = False   # True -> add --refine-rough-rescale
+
+
+
+
 
 
 ############################################################
@@ -98,17 +105,21 @@ gen_model = True
 
 #kmer table 
 #kmer_table_path = 'models/remora/4mer_9.4.1.csv'
-kmer_table_path = 'models/remora/9mer_10.4.1.csv'
+kmer_table_path = 'models/remora/9mer_10-4-1.tsv'
+#kmer_table_path = "/home/marchandlab/github/kaplanna/xemora/models/remora/9mer_10-4-1.tsv"
+
+
 
 #ml model (ConvLSTM_w_ref.py or Conv_w_ref.py')
 ml_model_path = 'models/ConvLSTM_w_ref.py'
 
+#reference bed flank size for plotting bed file
+flank_size = 10   # adjust as needed
 
 #Modified base in Fasta sequence you wish to train model or use model to basecall
-mod_base = 'B'
-
+mod_base = 'P'
 #Most similar substituted canonical base you will be comparing against 
-can_base = 'A'
+can_base = 'G'
 
 #Extent of Kmer content (-,+) to store for model training
 kmer_context ='4 4' 
@@ -120,27 +131,28 @@ chunk_context = '50 50'
 val_proportion = '0.2'
 
 #Number of chunks for training (in thousands: e.g.: '200' = 200,000 chunks) 
-chunk_num = '500000'
+chunk_num = '500000' 
 
 
 
 ############################################################
-
+#Raw basecall analysis filter by class 0
+FILTER_BY_CLASS_0 = True
 
 ############################################################
 #CutAdapt Demux parameters
-error_rate = 0.20
-min_overlap = 14
-min_len = 120
-max_len = 200 
+error_rate = 0.2 # default 0.2
+min_overlap = 14 # default 14
+min_len = 120 # default 120
+max_len = 200 # default 200
 
 
 ############################################################
 # New parameters for xr_train_methods.py from Jayson
-overwrite_pod = True
+overwrite_pod = False
 dorado_path = '~/dorado-0.8.0-linux-x64/bin/dorado'
 dorado_model = '~/dorado-0.8.0-linux-x64/models/dna_r10.4.1_e8.2_400bps_hac@v5.0.0'
-min_qscore = 7
+min_qscore = 7 #default 5
 #Range of chunk context to use (in bp) for modified base training (default +/- 0) 
 mod_chunk_range = 0
 can_chunk_range = 0
@@ -156,8 +168,11 @@ max_mod_reads = 0
 max_can_reads = 0
 max_bc_reads = 0
 
+
+
 filter_mod_readIDs = ''
 filter_can_readIDs = ''
+#filter_can_readIDs = '/home/marchandlab/DataAnalysis/Kaplan/training/BSn/250831_GNT_TNC_training_demux/training_v1_800pod5/demux/NB13_FWD_NB11_REV_read_ids.txt' #for TNC
 filter_readIDs_bc = ''
 
 ############################################################

@@ -48,7 +48,7 @@ basecall_pod = True
 dorado_path = '~/dorado-0.8.0-linux-x64/bin/dorado'
 dorado_model = '~/dorado-0.8.0-linux-x64/models/dna_r10.4.1_e8.2_400bps_hac@v5.0.0'
 min_qscore = 5
-pod_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/240108_Testing_Set_Demux/merged_pod5/50_pod5_test.pod5'
-bam_directory = '/home/marchandlab/DataAnalysis/Kaplan/basecall/10.4.1/DsPx/240108_Testing_Set_Demux'
+pod_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/250831_GNT_TNC_training_demux/training_v2_1300pod5/pod5/1300_pod5_train.pod5'
+bam_directory = '/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/250831_GNT_TNC_training_demux/training_v2_1300pod5/bam'
 
 dorado_basecall(dorado_path, dorado_model, min_qscore, pod_dir, bam_directory, basecall_pod)

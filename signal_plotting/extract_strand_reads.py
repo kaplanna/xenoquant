@@ -15,9 +15,6 @@ XNA = 'B'
 STRAND_FILTER = "-"  # Options: "+", "-", "both"
 
 
-
-
-
 # --- Define fixed input paths ---
 bed = os.path.join(working_dir, 'references', f'{XNA}.bed')
 
