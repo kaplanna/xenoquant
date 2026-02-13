@@ -363,23 +363,27 @@ def generate_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_cont
           --chunk-context '+chunk_context
         os.system(cmd)
         '''
-        print('Xemora  [STATUS] - Generating chunks for modified basecalling.')
-        #no motif
-        cmd = 'remora \
-          dataset prepare \
-          '+pod_file+' \
-          '+bam_file+' \
-          --output-remora-training-file '+chunk_file+' \
-          --focus-reference-positions '+bed_file+' \
-          --mod-base '+mod_base+' '+mod_base+' \
-          --kmer-context-bases '+kmer_context+' \
-          --max-chunks-per-read '+str(2*mod_chunk_range+1)+' \
-          --refine-kmer-level-table '+kmer_table_path+' \
-          --refine-rough-rescale '+' \
-           --motif N 0 \
-          --chunk-context '+chunk_context
+        print('Xemora [STATUS] - Generating chunks for modified basecalling.')
+        # No motif
+        cmd = (
+            'remora '
+            'dataset prepare '
+            f'{pod_file} '
+            f'{bam_file} '
+            f'--output-remora-training-file {chunk_file} '
+            f'--focus-reference-positions {bed_file} '
+            f'--mod-base {mod_base} {mod_base} '
+            f'--kmer-context-bases {kmer_context} '
+            f'--max-chunks-per-read {2 * mod_chunk_range + 1} '
+            f'--refine-kmer-level-table {kmer_table_path} '
+            '--refine-rough-rescale '
+            '--refine-scale-iters -1 '
+            f'--motif {can_base} 0 '
+            f'--chunk-context {chunk_context}'
+        )
         os.system(cmd)
         return chunk_file
+
     else:
         print('Xemora [STATUS] - Skipping chunk generation')
         return chunk_file
@@ -442,6 +446,88 @@ def add_per_read_mapping(primary_alignments, per_read_modifications):
     return per_read_modifications
     
     
+def filter_softclip_bam(
+    bam_path,
+    max_total_softclip_frac=0.3,
+    max_end_softclip_frac=0.2,
+    min_aligned_frac=0.6
+):
+    """
+    Filters BAM to remove reads with excessive soft clipping.
+
+    Designed for ONT data:
+    - Allows moderate end clipping
+    - Removes catastrophic or junk alignments
+    """
+
+    print(
+        "Xemora [STATUS] - Filtering alignments by soft clipping:\n"
+        f"  max_total_softclip_frac = {max_total_softclip_frac}\n"
+        f"  max_end_softclip_frac   = {max_end_softclip_frac}\n"
+        f"  min_aligned_frac        = {min_aligned_frac}"
+    )
+
+    tmp_bam = bam_path + ".tmp"
+    bam_in = pysam.AlignmentFile(bam_path, "rb")
+    bam_out = pysam.AlignmentFile(tmp_bam, "wb", header=bam_in.header)
+
+    kept, total = 0, 0
+
+    for read in bam_in:
+        if read.is_unmapped or read.cigartuples is None:
+            continue
+
+        total += 1
+        read_len = read.query_length
+        if read_len == 0:
+            continue
+
+        left_softclip = 0
+        right_softclip = 0
+        aligned_bases = 0
+        total_softclip = 0
+
+        cig = read.cigartuples
+
+        # Left softclip
+        if cig[0][0] == 4:
+            left_softclip = cig[0][1]
+
+        # Right softclip
+        if cig[-1][0] == 4:
+            right_softclip = cig[-1][1]
+
+        # Count aligned bases
+        for op, length in cig:
+            if op in (0, 7, 8):  # M, =, X
+                aligned_bases += length
+            elif op == 4:
+                total_softclip += length
+
+        # Apply filters
+        if (total_softclip / read_len) > max_total_softclip_frac:
+            continue
+        if (max(left_softclip, right_softclip) / read_len) > max_end_softclip_frac:
+            continue
+        if (aligned_bases / read_len) < min_aligned_frac:
+            continue
+
+        bam_out.write(read)
+        kept += 1
+
+    bam_in.close()
+    bam_out.close()
+
+    pysam.sort("-o", bam_path, tmp_bam)
+    pysam.index(bam_path)
+    os.remove(tmp_bam)
+
+    print(
+        f"Xemora [STATUS] - Softclip filter kept "
+        f"{kept}/{total} reads ({kept/total:.2%})"
+    )
+
+    return bam_path
 
 
 
@@ -473,10 +559,18 @@ def main():
     else:
         bc_bam = os.path.join(mod_bam_dir, "bc.bam")
         print('[STATUS] Skipping Dorado Basecall')
-    #Align using minimap2 
+    # Align using minimap2 
     aligned_bam = minimap2_aligner(bc_bam, xfasta_file, mod_bam_dir)
 
-    #Get primary alignments for reference sequence assignment
+    if filter_softclip:
+        aligned_bam = filter_softclip_bam(
+            aligned_bam,
+            max_total_softclip_frac,
+            max_end_softclip_frac,
+            min_aligned_frac
+        )
+
+
     primary_alignments = get_primary_alignments(aligned_bam)
     
     #Generate BED file for region to analyze 

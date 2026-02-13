@@ -17,6 +17,7 @@ Updated: 09/22/25
 
 import sys
 import os
+from typing import List
 from Bio.Seq import Seq
 from xr_params import *
 from xr_tools import fetch_xna_pos
@@ -24,14 +25,21 @@ from xr_tools import fetch_xna_pos
 ########################################################################
 print("Xemora [Status] - Initializing Xemora...")
 
+########################################################################
 # Helpers
 ########################################################################
 
-def get_confounding_base(base, mod_base, can_base):
-    """Return canonical substitute for modified base, or original base if not modified."""
-    return can_base if base == mod_base else base
 
-def get_xna_rc(base, xna_pairs):
+def get_confounding_base(base: str, confounding_pairs: List[str]) -> str:
+    """Return canonical confounding substitute for a given XNA base."""
+    for pair in confounding_pairs:
+        mod, can = pair[0], pair[1]
+        if base == mod:
+            return can
+    return base
+
+
+def get_xna_rc(base: str, xna_pairs: List[tuple]) -> str:
     """Return reverse complement for an XNA base using the xna_base_pairs list."""
     for pair in xna_pairs:
         if base == pair[0]:
@@ -41,7 +49,6 @@ def get_xna_rc(base, xna_pairs):
     # Default DNA complements
     dna_rc = {"A":"T","T":"A","G":"C","C":"G","N":"N"}
     return dna_rc.get(base, base)
-
 
 ########################################################################
 # Input / Output
@@ -78,7 +85,8 @@ with open(output_fasta, "w") as fout, open(input_fasta, "r") as fin:
                     x_locs = [i for i, c in enumerate(seq) if c == xna_base]
 
                     # Substitution with canonical base
-                    substitution_base = get_confounding_base(xna_base, mod_base, can_base)
+                    substitution_base = get_confounding_base(xna_base, confounding_pairs)
+
 
                     # Track if this requires RC fasta (segmentation-specific bases)
                     if xna_base in xna_segmentation_model_sets:
@@ -135,7 +143,7 @@ if require_rc_fasta:
 
                 for base, pos in x_pos_to_rc:
                     rc_base = get_xna_rc(base, xna_base_pairs)
-                    rc_sub = get_confounding_base(rc_base, mod_base, can_base)
+                    rc_sub = get_confounding_base(rc_base, confounding_pairs)
                     rc_pos = seq_len - int(pos) - 1
                     seq_rc = seq_rc[:rc_pos] + rc_sub + seq_rc[rc_pos+1:]
                     header_rc += f"{rc_base}:{rc_pos-1}-"

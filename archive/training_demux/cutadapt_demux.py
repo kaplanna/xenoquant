@@ -52,15 +52,15 @@ def generate_barcode_pairs(forward_barcodes, reverse_barcodes):
     return pairs
 
 # Define the paths to the input files and output directory
-input_fastq = "/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/250831_GNT_TNC_training_demux/training_v2_1300pod5/bam/bc.bam"
-output_dir = "/home/marchandlab/DataAnalysis/Kaplan/training/10.4.1/BSn/250831_GNT_TNC_training_demux/training_v2_1300pod5/demux"
-barcode_file = "/home/marchandlab/github/kaplanna/xemora/archive/training_demux/GNT_TNC_barcodes.fasta"
+input_fastq = "/home/marchandlab/DataAnalysis/Kaplan/training/2509_Signal_Plots/251226_CDsT_AT_Plots/DsA/canonical_preprocess/bam/bc.bam"
+output_dir = "/home/marchandlab/DataAnalysis/Kaplan/training/2509_Signal_Plots/251226_CDsT_AT_Plots/can_set_demux"
+barcode_file = "/home/marchandlab/github/kaplanna/xemora/archive/training_demux/GAA_CAT_barcodes_CA.fasta"
 
 os.makedirs(output_dir, exist_ok=True)
 
-error_rate = 0.25
-min_overlap = 10
-min_len = 100
+error_rate = 0.2
+min_overlap = 14
+min_len = 50
 max_len = 250
 
 # Parse the barcodes from the file

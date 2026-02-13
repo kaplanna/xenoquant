@@ -111,18 +111,21 @@ def minimap2_aligner(input_bam, xfasta_path, bam_directory):
     """Align with minimap2 → sorted + indexed BAM."""
     raw_bam   = os.path.join(bam_directory, "aligned.unsorted.bam")
     sorted_bam= os.path.join(bam_directory, "aligned.sorted.bam")
-    cmd_align = (
-        f"samtools fastq -T '*' {input_bam} | "
-        f"minimap2 -y -ax map-ont -k8 -w5 -s 80 --score-N 0 "
-        f"--secondary no --sam-hit-only --MD {xfasta_path} - | "
-        f"samtools view -F0x800 -bho {raw_bam}"
-    )
-    os.system(cmd_align)
-    os.system(f"samtools sort -o {sorted_bam} {raw_bam}")
-    os.system(f"samtools index {sorted_bam}")
-    if os.path.exists(raw_bam):
-        os.remove(raw_bam)
-        print(f"[CLEANUP] Removed unsorted BAM: {raw_bam}")
+    if regenerate_bam:
+        cmd_align = (
+            f"samtools fastq -T '*' {input_bam} | "
+            f"minimap2 -y -ax map-ont -k8 -w5 -s 80 --score-N 0 "
+            f"--secondary no --sam-hit-only --MD {xfasta_path} - | "
+            f"samtools view -F0x800 -bho {raw_bam}"
+        )
+        os.system(cmd_align)
+        os.system(f"samtools sort -o {sorted_bam} {raw_bam}")
+        os.system(f"samtools index {sorted_bam}")
+        if os.path.exists(raw_bam):
+            os.remove(raw_bam)
+            print(f"[CLEANUP] Removed unsorted BAM: {raw_bam}")
+    else:
+        print('Xemora [STATUS] - Skipping Minimap2 alignment.')
     return sorted_bam
 
 def ensure_index(bam_path):
@@ -216,71 +219,108 @@ def bed_gen_with_alias(xfasta_file, alias_map, xna_base, sub_base,
     print(f"Xemora [STATUS] - Wrote BED: {output_bed}")
     return output_bed
 
-# ---------------------------------------------------------------------
-# Normalization flag builders
-# ---------------------------------------------------------------------
-def build_norm_flags_for_dataset() -> str:
-    """
-    For `remora dataset prepare`:
-      - supports: --refine-kmer-level-table, --refine-rough-rescale
-    """
 
-    parts = []
-    if USE_KMER_REFINE:
-        table_abs = resolve_param_path(kmer_table_path)
-        if not os.path.exists(table_abs):
-            raise FileNotFoundError(f"[ERROR] k-mer levels table not found: {table_abs}")
-        parts += ["--refine-kmer-level-table", table_abs]
-    if USE_ROUGH_RESCALE:
-        parts.append("--refine-rough-rescale")
-    return " ".join(parts)
 
 
 
 # ---------------------------------------------------------------------
 # Chunk prep / merge / train
 # ---------------------------------------------------------------------
-def generate_mod_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_context, regenerate_chunks):
+def generate_mod_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_context, kmer_table_path, regenerate_chunks):
+    """
+    Prepares and runs a Remora command to generate chunks for modified base analysis.
+
+    Parameters:
+    pod_file (str): Merged POD5 file path.
+    bam_file (str): BAM file generated from POD5 file basecalling.
+    bed_file (str): BED file specifying the regions to analyze.
+    mod_base (str): Modified base to perform inference on, defined in xr_params.
+    kmer_context (str): k-mer context to use, defined in xr_params.
+    kmer_table_path (str): Path to the k-mer table, defined in xr_params.
+    regenerate_chunks (bool): Parameter to allow chunk files to be regenerated.
+
+    Returns: 
+    str: File path to the generated Remora chunk file.
+    """
     chunk_file = os.path.join(chunk_dir, 'mod_chunks.npz')
-    if not regenerate_chunks:
-        print('Xemora [STATUS] - Skipping modified chunk generation'); return chunk_file
-    print('Xemora [STATUS] - Generating chunks for modified basecalling.')
-    norm = build_norm_flags_for_dataset()
-    cmd = (
-        "remora dataset prepare "
-        f"{pod_file} {bam_file} "
-        f"--output-remora-training-file {chunk_file} "
-        f"--focus-reference-positions {bed_file} "
-        f"--mod-base {mod_base} {mod_base} "
-        f"--kmer-context-bases {kmer_context} "
-        f"--max-chunks-per-read {2*mod_chunk_range+1} "
-        f"{norm} "
-        f"--motif {can_base} 0 "
-        f"--chunk-context {chunk_context}"
-    )
-    os.system(cmd)
+
+    if regenerate_chunks:
+        print('Xemora [STATUS] - Generating chunks for modified basecalling.')
+
+        cmd = (
+            f"remora dataset prepare "
+            f"{pod_file} "
+            f"{bam_file} "
+            f"--output-remora-training-file {chunk_file} "
+            f"--focus-reference-positions {bed_file} "
+            f"--mod-base {mod_base} {mod_base} "
+            f"--kmer-context-bases {kmer_context} "
+            f"--max-chunks-per-read {2 * mod_chunk_range + 1} "
+            f"--refine-kmer-level-table {kmer_table_path} "
+            f"--refine-rough-rescale "
+            f"--refine-scale-iters -1 "
+            f"--motif {can_base} 0 "
+            f"--chunk-context {chunk_context}"
+        )
+
+        os.system(cmd)
+        return chunk_file
+
+    else:
+        print('Xemora [STATUS] - Skipping modified chunk generation')
+        return chunk_file
+        
+'''
+            f"--refine-half-bandwidth 80 "
+            f"--refine-short-dwell-parameters 8 3 2.0 "
+'''
+
+
+def generate_can_chunks(pod_file, bam_file, chunk_dir, bed_file, can_base, kmer_context, kmer_table_path, regenerate_chunks):
+    """
+    Prepares and runs a Remora command to generate chunks for canonical base analysis.
+
+    Parameters:
+    pod_file (str): Merged POD5 file path.
+    bam_file (str): BAM file generated from POD5 file basecalling.
+    bed_file (str): BED file specifying the regions to analyze.
+    can_base (str): Canonical base to perform inference on, defined in xr_params.
+    kmer_context (str): k-mer context to use, defined in xr_params.
+    kmer_table_path (str): Path to the k-mer table, defined in xr_params.
+    regenerate_chunks (bool): Parameter to allow chunk files to be regenerated.
+
+    Returns: 
+    str: File path to the generated Remora chunk file.
+    """
+    chunk_file = os.path.join(chunk_dir, 'can_chunks.npz')
+
+    if regenerate_chunks:
+        print('Xemora [STATUS] - Generating chunks for modified basecalling.')
+
+        cmd = (
+            f"remora dataset prepare "
+            f"{pod_file} "
+            f"{bam_file} "
+            f"--output-remora-training-file {chunk_file} "
+            f"--focus-reference-positions {bed_file} "
+            f"--mod-base-control "
+            f"--kmer-context-bases {kmer_context} "
+            f"--max-chunks-per-read {2 * mod_chunk_range + 1} "
+            f"--refine-kmer-level-table {kmer_table_path} "
+            f"--refine-rough-rescale "
+            f"--refine-scale-iters -1 "
+            f"--motif {can_base} 0 "
+            f"--chunk-context {chunk_context}"
+        )
+
+
+        os.system(cmd)
+
+    else:
+        print('Xemora [STATUS] - Skipping canonical chunk generation')
+    
     return chunk_file
 
-def generate_can_chunks(pod_file, bam_file, chunk_dir, bed_file, can_base, kmer_context, regenerate_chunks):
-    chunk_file = os.path.join(chunk_dir, 'can_chunks.npz')
-    if not regenerate_chunks:
-        print('Xemora [STATUS] - Skipping canonical chunk generation'); return chunk_file
-    print('Xemora [STATUS] - Generating chunks for canonical basecalling.')
-    norm = build_norm_flags_for_dataset()
-    cmd = (
-        "remora dataset prepare "
-        f"{pod_file} {bam_file} "
-        f"--output-remora-training-file {chunk_file} "
-        f"--focus-reference-positions {bed_file} "
-        f"--max-chunks-per-read {2*mod_chunk_range+1} "
-        f"--mod-base-control "
-        f"--motif {can_base} 0 "
-        f"--kmer-context-bases {kmer_context} "
-        f"{norm} "
-        f"--chunk-context {chunk_context}"
-    )
-    os.system(cmd)
-    return chunk_file
 
 def merge_chunks(chunk_dir, mod_chunks, can_chunks, balance_chunks):
     out = os.path.join(chunk_dir, 'training_chunks.npz')
@@ -327,6 +367,10 @@ def xemora_training(model_dir, training_chunks):
     val_log    = os.path.join(model_dir, 'validation.log')
     return model_path, val_log
 
+import subprocess
+import shlex
+import os
+
 def run_remora_ref_region_plot(
     can_pod5, can_bam,
     mod_pod5, mod_bam,
@@ -335,65 +379,57 @@ def run_remora_ref_region_plot(
     levels_table,
     out_dir,
     prefix="ref_region",
-    log_name="ref_region.log"
+    log_name="ref_region.log",
+    soft_fail=True,                 # <— NEW
 ):
     """
-    Generate Remora ref_region plots (Remora 2.1 style).
-
-    Parameters
-    ----------
-    can_pod5 : str
-        Path to canonical pod5 file
-    can_bam : str
-        Path to canonical aligned bam file
-    mod_pod5 : str
-        Path to modified pod5 file
-    mod_bam : str
-        Path to modified aligned bam file
-    ref_bed : str
-        BED file with ref regions to plot
-    highlight_bed : str
-        BED file with highlight regions (optional, can be same as ref_bed)
-    levels_table : str
-        Path to k-mer levels table
-    out_dir : str
-        Directory to save plots
-    prefix : str
-        Prefix for output files
-    log_name : str
-        Name of log file
+    Generate Remora ref_region plots. If soft_fail=True, any error is logged and
+    the pipeline continues (returns a nonzero rc). If False, raises on error.
     """
     os.makedirs(out_dir, exist_ok=True)
-    cwd = os.getcwd()
+    # Resolve absolute paths (keeps existing behavior)
+    ref_bed      = os.path.abspath(os.path.expanduser(ref_bed))
+    highlight_bed= os.path.abspath(os.path.expanduser(highlight_bed))
+    levels_table = os.path.abspath(os.path.expanduser(levels_table))
+
+    if not os.path.exists(levels_table):
+        msg = f"[ERROR] k-mer levels table not found: {levels_table}"
+        if soft_fail:
+            print(msg)
+            return 2  # arbitrary nonzero
+        raise FileNotFoundError(msg)
+
+    cmd = (
+        "remora analyze plot ref_region "
+        f"--pod5-and-bam {can_pod5} {can_bam} "
+        f"--pod5-and-bam {mod_pod5} {mod_bam} "
+        f"--ref-regions {ref_bed} "
+        f"--highlight-ranges {highlight_bed} "
+        f"--refine-kmer-level-table {levels_table} "
+        f"--refine-rough-rescale "
+        f"--log-filename {log_name}"
+    )
+    print(f"[DEBUG] Running Remora ref_region plot:\n{cmd}")
+
     try:
-        # Resolve absolute paths
-        ref_bed = os.path.abspath(os.path.expanduser(ref_bed))
-        highlight_bed = os.path.abspath(os.path.expanduser(highlight_bed))
-        levels_table = os.path.abspath(os.path.expanduser(levels_table))
+        rc = subprocess.run(shlex.split(cmd), cwd=out_dir).returncode
+    except Exception as e:
+        if soft_fail:
+            print(f"[WARN] Remora ref_region plotting raised {type(e).__name__}: {e}")
+            return 3
+        raise
 
-        if not os.path.exists(levels_table):
-            raise FileNotFoundError(f"[ERROR] k-mer levels table not found: {levels_table}")
+    if rc != 0:
+        msg = f"[WARN] Remora ref_region plotting failed with code {rc}. " \
+              f"Continuing (soft_fail=True). See {os.path.join(out_dir, log_name)}"
+        if soft_fail:
+            print(msg)
+            return rc
+        raise RuntimeError(msg)
 
-        os.chdir(out_dir)
+    print(f"Xemora [STATUS] - Remora ref_region plots written to {out_dir}")
+    return 0
 
-        # Build the Remora command
-        cmd = (
-            f"remora analyze plot ref_region "
-            f"--pod5-and-bam {can_pod5} {can_bam} "
-            f"--pod5-and-bam {mod_pod5} {mod_bam} "
-            f"--ref-regions {ref_bed} "
-            f"--highlight-ranges {highlight_bed} "
-            f"--refine-kmer-level-table {levels_table} "
-            f"--refine-rough-rescale "
-            f"--log-filename {log_name}"
-        )
-        print(f"[DEBUG] Running Remora ref_region plot:\n{cmd}")
-        rc = os.system(cmd)
-        if rc != 0:
-            raise RuntimeError(f"Remora ref_region plotting failed with code {rc}")
-        print(f"Xemora [STATUS] - Remora ref_region plots written to {out_dir}")
-    finally:
-        os.chdir(cwd)
 
 
 # ---------------------------------------------------------------------
@@ -433,7 +469,7 @@ def main():
     # Ref regions (for plots; use whichever you prefer)
     ref_regions_bed = bed_gen_with_alias(
         mod_xfasta, mod_alias_map, mod_base, mod_base,
-        flank_size, 0,
+        FLANK, 0,
         os.path.join(ref_dir, f"{mod_base}_ref_regions.bed")
     )
 
@@ -455,21 +491,31 @@ def main():
     ensure_index(mod_aligned_bam)
     ensure_index(can_aligned_bam)
 
-        # Step: Generate Remora plots
-    remora_plot_dir = check_make_dir(os.path.join(working_dir, "remora_plots"))
-    run_remora_ref_region_plot(
-        can_merged_pod5, can_aligned_bam,
-        mod_merged_pod5, mod_aligned_bam,
-        ref_bed=ref_regions_bed,             # or mod_bed_file if you want mod-specific
-        highlight_bed=mod_bed_file,       # whichever highlight you want
-        levels_table=kmer_table_path,
-        out_dir=remora_plot_dir
-    )
+    # -----------------------------------------------------------------
+    # Optional: Generate Remora ref_region plots
+    # -----------------------------------------------------------------
+    if generate_remora_plots:
+        remora_plot_dir = check_make_dir(os.path.join(working_dir, "remora_plots"))
+        rc_plot = run_remora_ref_region_plot(
+            can_merged_pod5, can_aligned_bam,
+            mod_merged_pod5, mod_aligned_bam,
+            ref_bed=ref_regions_bed,
+            highlight_bed=mod_bed_file,
+            levels_table=kmer_table_path,
+            out_dir=remora_plot_dir,
+            soft_fail=True,   # continue even if plotting fails
+        )
+        if rc_plot != 0:
+            print(f"[INFO] Skipping plot-dependent post-steps; plot rc={rc_plot}")
+    else:
+        print("Xemora [STATUS] - Skipping Remora plotting (generate_remora_plots=False)")
 
 
-    # Step 4: Chunks
-    mod_chunk_path = generate_mod_chunks(mod_merged_pod5, mod_aligned_bam, chunk_dir, mod_bed_file, mod_base, kmer_context, regenerate_chunks=True)
-    can_chunk_path = generate_can_chunks(can_merged_pod5, can_aligned_bam, chunk_dir, can_bed_file, can_base, kmer_context, regenerate_chunks=True)
+
+
+    # Step 4: Generate Remora chunks
+    mod_chunk_path = generate_mod_chunks(mod_merged_pod5, mod_aligned_bam, chunk_dir, mod_bed_file, mod_base, kmer_context, kmer_table_path, regenerate_chunks)
+    can_chunk_path = generate_can_chunks(can_merged_pod5, can_aligned_bam, chunk_dir, can_bed_file, can_base, kmer_context, kmer_table_path, regenerate_chunks)
 
     # Step 5: Merge
     training_chunk_path = merge_chunks(chunk_dir, mod_chunk_path, can_chunk_path, balance_chunks)

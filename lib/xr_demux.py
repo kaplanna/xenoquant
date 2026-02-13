@@ -37,7 +37,9 @@ def run_cutadapt(input_fastq, adapter, output_file, error_rate, min_overlap, min
         '-o', output_file,  # Output file
         input_fastq  # Input FASTQ file
     ]
-    subprocess.run(cmd, check=True)
+    result = subprocess.run(cmd, check=True, text=True, capture_output=True)
+    print(result.stderr)  # short summary
+
 
 def combine_and_deduplicate_fastq(file1, file2, output_file):
     unique_reads = set()
@@ -133,45 +135,7 @@ def merge_read_ids_with_modifications(modifications_df, read_ids_csv):
 # ave the merged dataframe to a new file
 def save_merged_output(merged_df, output_file):
     merged_df.to_csv(output_file, sep='\t', index=False)
-
-# Load the full barcode list
-barcode_dict = load_full_barcode_list(barcode_list)
-
-# Map barcode pairs to sequences
-barcode_pairs = map_barcode_pairs(barcode_pair_csv, barcode_dict)
-
-# Prepare to collect all read IDs
-all_read_ids = []
-
-# Process the BAM file with each barcode pair
-for barcode_pair, (sample_id, barcode1, barcode2) in barcode_pairs.items():
-    barcode2_rc = reverse_complement(barcode2)
-    barcode1_rc = reverse_complement(barcode1)
-    combined_adapter1 = f'{barcode1}...{barcode2_rc}'
-    combined_adapter2 = f'{barcode2}...{barcode1_rc}'
-
-    output_file1 = os.path.join(fastq_dir, f'{barcode_pair}_1.fastq')
-    output_file2 = os.path.join(fastq_dir, f'{barcode_pair}_2.fastq')
-
-    print(f'Running cutadapt for barcode pair: {barcode_pair}, adapter 1')
-    run_cutadapt(bc_bam, combined_adapter1, output_file1, error_rate, min_overlap, min_len, max_len)
-
-    print(f'Running cutadapt for barcode pair: {barcode_pair}, adapter 2')
-    run_cutadapt(bc_bam, combined_adapter2, output_file2, error_rate, min_overlap, min_len, max_len)
-
-    # Combine and deduplicate outputs
-    dedup_output = os.path.join(fastq_dir, f'{barcode_pair}.fastq')
-    print(f'Combining and deduplicating output for barcode pair: {barcode_pair}')
-    combine_and_deduplicate_fastq(output_file1, output_file2, dedup_output)
-
-    # Extract read IDs and append to the list (NOW INCLUDING SAMPLE ID)
-    extract_read_ids(dedup_output, barcode_pair, sample_id, all_read_ids)
-
-    # Delete the non-deduplicated files
-    os.remove(output_file1)
-    os.remove(output_file2)
-
-# Create a function to aggregate results by barcode pair
+    
 def calculate_overall_results(merged_df, barcode_pairs):
     """
     Calculate overall results grouped by sample ID and barcode pair.
@@ -184,7 +148,9 @@ def calculate_overall_results(merged_df, barcode_pairs):
         DataFrame: Aggregated results including sample ID, barcode pair, and classification counts.
     """
     # Add sample ID column by mapping from barcode_pairs dictionary
-    merged_df['sample_id'] = merged_df['barcode_pair'].map(lambda x: barcode_pairs.get(x, ('Unknown',))[0])
+    merged_df['sample_id'] = merged_df['barcode_pair'].map(
+        lambda x: barcode_pairs.get(x, ('Unknown',))[0]
+    )
 
     # Group by sample ID and barcode pair
     results = merged_df.groupby(['sample_id', 'barcode_pair']).agg(
@@ -193,51 +159,206 @@ def calculate_overall_results(merged_df, barcode_pairs):
         Number_of_0s=('class_pred', lambda x: (x == 0).sum())
     ).reset_index()
 
-    # Calculate the percentage of 1s and 0s
+    # Calculate percentages
     results['Percentage_1'] = (results['Number_of_1s'] / results['Total_Reads']) * 100
     results['Percentage_0'] = (results['Number_of_0s'] / results['Total_Reads']) * 100
 
     return results
 
-
-# Save the aggregated results to a CSV file
 def save_overall_results(results_df, output_file):
     results_df.to_csv(output_file, index=False)
+    
+def extract_p_class1(prob_string):
+    """Extract P(class1) from 'p0,p1'"""
+    try:
+        return float(prob_string.split(",")[1])
+    except Exception:
+        return np.nan
 
 
-# Remove read IDs that appear in multiple barcode pairs and print the count
-all_read_ids = remove_duplicate_read_ids(all_read_ids)
+def apply_hard_decision_threshold(df, threshold):
+    """
+    Reassign basecalls using a hard decision threshold (>0.5).
+    No reads are dropped.
+    """
+    df = df.copy()
+    df["p_class1"] = df["class_probs"].apply(extract_p_class1)
+    df["class_pred_reassigned"] = (df["p_class1"] >= threshold).astype(int)
+    return df
 
-# Write all read IDs to a single CSV file
-read_ids_csv = os.path.join(demux_dir, 'all_read_ids.csv')
-with open(read_ids_csv, 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(["sample_id", "barcode_pair", "read_id"])  # Updated header
-    writer.writerows(all_read_ids)
 
+def calculate_overall_results_reassigned(df):
+    """
+    Aggregate results using reassigned basecalls
+    """
+    results = (
+        df.groupby(["sample_id", "barcode_pair"])
+          .agg(
+              Total_Reads=("read_id", "size"),
+              Number_of_1s=("class_pred_reassigned", lambda x: (x == 1).sum()),
+              Number_of_0s=("class_pred_reassigned", lambda x: (x == 0).sum())
+          )
+          .reset_index()
+    )
 
+    results["Percentage_1"] = 100 * results["Number_of_1s"] / results["Total_Reads"]
+    results["Percentage_0"] = 100 * results["Number_of_0s"] / results["Total_Reads"]
 
-print('Xemora [Status]: Cutadapt processing, deduplication, read ID extraction, duplicate removal, and cleanup completed for all barcode pairs.')
+    return results
+
+    
+    
+# Load the full barcode list
+barcode_dict = load_full_barcode_list(barcode_list)
+
+# Map barcode pairs to sequences
+barcode_pairs = map_barcode_pairs(barcode_pair_csv, barcode_dict)
+
+# Prepare to collect all read IDs
+all_read_ids = []
+
+if RERUN_DEMUX:
+    # Process the BAM file with each barcode pair
+    for barcode_pair, (sample_id, barcode1, barcode2) in barcode_pairs.items():
+        barcode2_rc = reverse_complement(barcode2)
+        barcode1_rc = reverse_complement(barcode1)
+        combined_adapter1 = f'{barcode1}...{barcode2_rc}'
+        combined_adapter2 = f'{barcode2}...{barcode1_rc}'
+
+        output_file1 = os.path.join(fastq_dir, f'{barcode_pair}_1.fastq')
+        output_file2 = os.path.join(fastq_dir, f'{barcode_pair}_2.fastq')
+
+        print(f'Running cutadapt for barcode pair: {barcode_pair}, adapter 1')
+        run_cutadapt(bc_bam, combined_adapter1, output_file1, error_rate, min_overlap, min_len, max_len)
+
+        print(f'Running cutadapt for barcode pair: {barcode_pair}, adapter 2')
+        run_cutadapt(bc_bam, combined_adapter2, output_file2, error_rate, min_overlap, min_len, max_len)
+
+        dedup_output = os.path.join(fastq_dir, f'{barcode_pair}.fastq')
+        print(f'Combining and deduplicating output for barcode pair: {barcode_pair}')
+        combine_and_deduplicate_fastq(output_file1, output_file2, dedup_output)
+
+        extract_read_ids(dedup_output, barcode_pair, sample_id, all_read_ids)
+
+        os.remove(output_file1)
+        os.remove(output_file2)
+
+    # Remove duplicates and save all_read_ids.csv
+    all_read_ids = remove_duplicate_read_ids(all_read_ids)
+    read_ids_csv = os.path.join(demux_dir, 'all_read_ids.csv')
+
+    if not all_read_ids:
+        print("Warning: No read IDs collected, skipping write to all_read_ids.csv")
+    else:
+        with open(read_ids_csv, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["sample_id", "barcode_pair", "read_id"])
+            writer.writerows(all_read_ids)
+
+    print('Xemora [Status]: Cutadapt demux completed.')
+
+else:
+    # Skip demux, just load existing read_ids
+    read_ids_csv = os.path.join(demux_dir, 'all_read_ids.csv')
+    if not os.path.exists(read_ids_csv):
+        raise FileNotFoundError(
+            f"No existing all_read_ids.csv found at {read_ids_csv}. "
+            "Set RERUN_DEMUX=True to generate it."
+        )
+    print(f'Xemora [Status]: Skipping demux. Using existing {read_ids_csv}.')
+
+# -------------------------------------------------------------------
+# Analysis section (unchanged)
+# -------------------------------------------------------------------
 
 # Load the per-read modifications file (assumes working_dir is already defined)
 modifications_file = os.path.join(working_dir, 'remora_outputs', 'per-read_modifications.tsv')
 modifications_df = load_per_read_modifications(modifications_file)
 
-# Load the all_read_ids.csv generated by the previous script and merge it with the modifications
-read_ids_csv = os.path.join(demux_dir, 'all_read_ids.csv')
+# Merge with read IDs
 merged_df = merge_read_ids_with_modifications(modifications_df, read_ids_csv)
 
-# Save the result back to a new file
 output_file = os.path.join(demux_dir, 'demux_per-read_modifications.tsv')
-save_merged_output(merged_df, output_file)
 
-print(f'Merged modifications and read IDs saved to {output_file}')
+# Keep only the desired columns
+keep_cols = [
+    "read_id",
+    "read_focus_base",
+    "label",
+    "class_pred",
+    "class_probs",
+    "ref_start_pos",
+    "ref_length",
+    "basecalled_sequence",
+    "sample_id",
+    "barcode_pair"
+]
 
+slim_df = merged_df[keep_cols].copy()
+slim_df.to_csv(output_file, sep='\t', index=False)
+
+print(f'Merged modifications (slimmed) saved to {output_file}')
+
+
+# Aggregate overall results
 overall_results = calculate_overall_results(merged_df, barcode_pairs)
 
-# Save the overall results to a CSV file
+# Save overall results
 overall_results_file = os.path.join(demux_dir, 'overall_demux_results.csv')
 save_overall_results(overall_results, overall_results_file)
-
 print(f'Overall results saved to {overall_results_file}')
+
+# -------------------------------------------------------------------
+# Optional: Decision threshold reassignment
+# -------------------------------------------------------------------
+
+if USE_DECISION_THRESHOLD:
+    print(
+        f"Xemora [Status]: Reassigning basecalls with decision threshold = {DECISION_THRESHOLD}"
+    )
+
+    reassigned_df = apply_hard_decision_threshold(
+        slim_df,
+        DECISION_THRESHOLD
+    )
+
+    # ------------------------------------------------------------
+    # Save per-read reassigned output (NEW FILE)
+    # ------------------------------------------------------------
+    reassigned_per_read = os.path.join(
+        demux_dir,
+        f"demux_per-read_modifications_recalled_T{DECISION_THRESHOLD:.2f}.tsv"
+    )
+
+    reassigned_df.to_csv(reassigned_per_read, sep="\t", index=False)
+
+    print(f"Reassigned per-read file saved to {reassigned_per_read}")
+
+    # ------------------------------------------------------------
+    # Recompute overall results (NEW FILE)
+    # ------------------------------------------------------------
+    reassigned_overall = calculate_overall_results_reassigned(reassigned_df)
+
+    reassigned_overall_file = os.path.join(
+        demux_dir,
+        f"overall_demux_results_recalled_T{DECISION_THRESHOLD:.2f}.csv"
+    )
+
+    reassigned_overall.to_csv(reassigned_overall_file, index=False)
+
+    print(f"Reassigned overall results saved to {reassigned_overall_file}")
+
+    # ------------------------------------------------------------
+    # Summary
+    # ------------------------------------------------------------
+    changed = (
+        reassigned_df["class_pred"] !=
+        reassigned_df["class_pred_reassigned"]
+    ).sum()
+
+    print(
+        f"Decision threshold changed {changed} / {len(reassigned_df)} reads "
+        f"relative to Remora argmax."
+    )
+
 

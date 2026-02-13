@@ -30,21 +30,21 @@ dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/DsPx/241209_C_Ds_T_Px
 ############################################################
 #Basecall paths
 
-bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/8letter/250921_P8_H4_NN_Basecall/SN-Basecall'
-bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/250814_P8_H4_dXTP_Opt/20250814_1746_MN37138_AYK921_bdc73555/pod5'
-bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/250814_P8_H4_dXTP_Opt/reference/REF_P8_H4_NB.fasta'
-barcode_pair_csv = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/250814_P8_H4_dXTP_Opt/reference/DEMUX_P8_H4.csv'
-bc_model_file = '/home/marchandlab/github/kaplanna/xemora/models/250901_GNT_BSn_Models/SN-model_best.pt'
+bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/8letter/251126_H7-8_Basecall/PG-Basecall_100-100'
+bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/251125_H7-8_6LT-8TP/20251125_1800_MN37138_AYY072_d282dce0/pod5'
+bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/251125_H7-8_6LT-8TP/reference/REF_H7-8_P_only.fasta'
+barcode_pair_csv = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/251125_H7-8_6LT-8TP/reference/DEMUX_H7-8.csv'
+bc_model_file = '/home/marchandlab/DataAnalysis/Kaplan/training/PZ/251020_PG_training/PG-Train_100_100/model/model_best.pt'
 
 #bc_model_file = working_dir+'/model/model_best.pt'
 
 
 ############################################################
 ############################################################
-train_model = True
-basecall_reads = False
-output_alignment_results = False
-cutadapt_demux = False
+train_model = False
+basecall_reads = True
+output_alignment_results = True
+cutadapt_demux = True
 raw_basecall_analysis = False
 ##########################################################
 #conda activate xemora-re
