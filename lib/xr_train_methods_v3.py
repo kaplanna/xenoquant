@@ -20,7 +20,7 @@ from typing import Optional
 from xr_tools  import *          # project helpers (fetch_xna_pos, xna_base_rc, etc.)
 from xr_params import *          # project parameters & booleans
 
-print('Xemora [STATUS] - Initializing Xemora...')
+print('Xenoquant [STATUS] - Initializing Xenoquant...')
 
 # ---------------------------------------------------------------------
 # CLI args
@@ -64,11 +64,11 @@ def resolve_param_path(p: str) -> str:
 def validate_read_directory(raw_dir):
     """Return 'fast5' or 'pod5' if the directory is homogeneous; else warn."""
     if not os.path.isdir(raw_dir):
-        print(f"Xemora [ERROR] - Directory not found: {raw_dir}")
+        print(f"Xenoquant [ERROR] - Directory not found: {raw_dir}")
         sys.exit(1)
     exts = {f.split('.')[-1] for f in os.listdir(raw_dir) if '.' in f}
     if len(exts) != 1:
-        print(f"Xemora [STATUS] - Passed reads directory not homogeneous. File types found: {sorted(exts)}")
+        print(f"Xenoquant [STATUS] - Passed reads directory not homogeneous. File types found: {sorted(exts)}")
         return ""
     return list(exts)[0]
 
@@ -79,7 +79,7 @@ def cod5_to_fast5(fast5_input, pod_dir, overwrite_pod):
         cmd = f'pod5 convert fast5 --force-overwrite {fast5_input}/*.fast5 -o {out}'
         os.system(cmd)
     else:
-        print('Xemora [STATUS] - Skipping FAST5→POD5 conversion')
+        print('Xenoquant [STATUS] - Skipping FAST5→POD5 conversion')
     return out
 
 def pod5_merge(pod5_input, pod_dir, overwrite_pod):
@@ -89,14 +89,14 @@ def pod5_merge(pod5_input, pod_dir, overwrite_pod):
         cmd = f'pod5 merge --force-overwrite {pod5_input}/*.pod5 -o {out}'
         os.system(cmd)
     else:
-        print('Xemora [STATUS] - Skipping POD5 merge')
+        print('Xenoquant [STATUS] - Skipping POD5 merge')
     return out
 
 def dorado_basecall(dorado_path, dorado_model, min_qscore, pod5_file, bam_dir, basecall_pod, max_reads, filter_readIDs):
     """Run Dorado basecaller → BAM."""
     out_bam = os.path.join(bam_dir, 'bc.bam')
     if basecall_pod or not os.path.exists(out_bam):
-        print('Xemora [STATUS] - Performing basecalling using Dorado')
+        print('Xenoquant [STATUS] - Performing basecalling using Dorado')
         args = f'--no-trim --emit-moves {pod5_file}'
         if filter_readIDs: args += f' -l {filter_readIDs}'
         if max_reads:      args += f' -n {max_reads}'
@@ -104,7 +104,7 @@ def dorado_basecall(dorado_path, dorado_model, min_qscore, pod5_file, bam_dir, b
         cmd = f'{os.path.expanduser(dorado_path)} basecaller {dorado_model} {args} > {out_bam}'
         os.system(cmd)
     else:
-        print('Xemora [STATUS] - Skipping basecalling; BAM exists.')
+        print('Xenoquant [STATUS] - Skipping basecalling; BAM exists.')
     return out_bam
 
 def minimap2_aligner(input_bam, xfasta_path, bam_directory):
@@ -125,7 +125,7 @@ def minimap2_aligner(input_bam, xfasta_path, bam_directory):
             os.remove(raw_bam)
             print(f"[CLEANUP] Removed unsorted BAM: {raw_bam}")
     else:
-        print('Xemora [STATUS] - Skipping Minimap2 alignment.')
+        print('Xenoquant [STATUS] - Skipping Minimap2 alignment.')
     return sorted_bam
 
 def ensure_index(bam_path):
@@ -186,8 +186,8 @@ def sanitize_fasta(input_fa, ref_dir, suffix="_clean"):
                 fmap.write(f"{alias}\t{orig}\n")
             else:
                 fout.write(line)
-    print(f"Xemora [STATUS] - Wrote sanitized FASTA: {out_fa}")
-    print(f"Xemora [STATUS] - Wrote mapping TSV: {map_tsv}")
+    print(f"Xenoquant [STATUS] - Wrote sanitized FASTA: {out_fa}")
+    print(f"Xenoquant [STATUS] - Wrote mapping TSV: {map_tsv}")
     return out_fa, alias_map
 
 def bed_gen_with_alias(xfasta_file, alias_map, xna_base, sub_base,
@@ -216,7 +216,7 @@ def bed_gen_with_alias(xfasta_file, alias_map, xna_base, sub_base,
                 start  = x_pos - chunk_range + chunk_shift
                 end    = x_pos + chunk_range + 1 + chunk_shift
                 fr.write(f"{alias}\t{start}\t{end}\t{header}\t0\t{strand}\n")
-    print(f"Xemora [STATUS] - Wrote BED: {output_bed}")
+    print(f"Xenoquant [STATUS] - Wrote BED: {output_bed}")
     return output_bed
 
 
@@ -245,7 +245,7 @@ def generate_mod_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_
     chunk_file = os.path.join(chunk_dir, 'mod_chunks.npz')
 
     if regenerate_chunks:
-        print('Xemora [STATUS] - Generating chunks for modified basecalling.')
+        print('Xenoquant [STATUS] - Generating chunks for modified basecalling.')
 
         cmd = (
             f"remora dataset prepare "
@@ -267,7 +267,7 @@ def generate_mod_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_
         return chunk_file
 
     else:
-        print('Xemora [STATUS] - Skipping modified chunk generation')
+        print('Xenoquant [STATUS] - Skipping modified chunk generation')
         return chunk_file
         
 '''
@@ -295,7 +295,7 @@ def generate_can_chunks(pod_file, bam_file, chunk_dir, bed_file, can_base, kmer_
     chunk_file = os.path.join(chunk_dir, 'can_chunks.npz')
 
     if regenerate_chunks:
-        print('Xemora [STATUS] - Generating chunks for modified basecalling.')
+        print('Xenoquant [STATUS] - Generating chunks for modified basecalling.')
 
         cmd = (
             f"remora dataset prepare "
@@ -317,7 +317,7 @@ def generate_can_chunks(pod_file, bam_file, chunk_dir, bed_file, can_base, kmer_
         os.system(cmd)
 
     else:
-        print('Xemora [STATUS] - Skipping canonical chunk generation')
+        print('Xenoquant [STATUS] - Skipping canonical chunk generation')
     
     return chunk_file
 
@@ -325,8 +325,8 @@ def generate_can_chunks(pod_file, bam_file, chunk_dir, bed_file, can_base, kmer_
 def merge_chunks(chunk_dir, mod_chunks, can_chunks, balance_chunks):
     out = os.path.join(chunk_dir, 'training_chunks.npz')
     if not remerge_chunks:
-        print('Xemora [STATUS] - Skipping chunk merging'); return out
-    print('Xemora [STATUS] - Merging chunks for training.')
+        print('Xenoquant [STATUS] - Skipping chunk merging'); return out
+    print('Xenoquant [STATUS] - Merging chunks for training.')
     if balance_chunks:
         cmd = (
             "remora dataset merge "
@@ -345,11 +345,11 @@ def merge_chunks(chunk_dir, mod_chunks, can_chunks, balance_chunks):
     os.system(cmd)
     return out
 
-def xemora_training(model_dir, training_chunks):
+def Xenoquant_training(model_dir, training_chunks):
     if not gen_model:
-        print('Xemora [STATUS] - Skipping model training')
+        print('Xenoquant [STATUS] - Skipping model training')
         return os.path.join(model_dir, 'model_best.pt'), os.path.join(model_dir, 'validation.log')
-    print('Xemora [STATUS] - Training model.')
+    print('Xenoquant [STATUS] - Training model.')
     cmd = (
         "remora model train "
         f"{os.path.join(chunk_dir,'training_chunks.npz')} "
@@ -427,7 +427,7 @@ def run_remora_ref_region_plot(
             return rc
         raise RuntimeError(msg)
 
-    print(f"Xemora [STATUS] - Remora ref_region plots written to {out_dir}")
+    print(f"Xenoquant [STATUS] - Remora ref_region plots written to {out_dir}")
     return 0
 
 
@@ -477,7 +477,7 @@ def main():
     mod_ft = validate_read_directory(xna_raw_dir)
     can_ft = validate_read_directory(dna_raw_dir)
     if mod_ft not in ("fast5", "pod5") or can_ft not in ("fast5", "pod5"):
-        print('Xemora [ERROR] - Raw data directory must contain only POD5 or FAST5'); sys.exit(1)
+        print('Xenoquant [ERROR] - Raw data directory must contain only POD5 or FAST5'); sys.exit(1)
     mod_merged_pod5 = cod5_to_fast5(xna_raw_dir, mod_pod_dir, overwrite_pod) if mod_ft == 'fast5' else pod5_merge(xna_raw_dir, mod_pod_dir, overwrite_pod)
     can_merged_pod5 = cod5_to_fast5(dna_raw_dir, can_pod_dir, overwrite_pod) if can_ft == 'fast5' else pod5_merge(dna_raw_dir, can_pod_dir, overwrite_pod)
 
@@ -508,7 +508,7 @@ def main():
         if rc_plot != 0:
             print(f"[INFO] Skipping plot-dependent post-steps; plot rc={rc_plot}")
     else:
-        print("Xemora [STATUS] - Skipping Remora plotting (generate_remora_plots=False)")
+        print("Xenoquant [STATUS] - Skipping Remora plotting (generate_remora_plots=False)")
 
 
 
@@ -521,7 +521,7 @@ def main():
     training_chunk_path = merge_chunks(chunk_dir, mod_chunk_path, can_chunk_path, balance_chunks)
 
     # Step 6: Train
-    model_path, validation_log_path = xemora_training(model_dir, training_chunk_path)
+    model_path, validation_log_path = Xenoquant_training(model_dir, training_chunk_path)
 
 if __name__ == "__main__":
     main()

@@ -3,11 +3,7 @@
 """
 xr_params.py 
 
-Title: Unpublished work
 
-By: H. Kawabe, N. Kaplan, J. A. Marchand
-
-Updated: 3/2/23
 """
 ########################################################################
 ########################################################################
@@ -64,7 +60,7 @@ bam_convert = False
 #Merge fail bam DEFAULT: False
 merge_fail = False
 
-#convert bam files to fasta for troubleshooting- NOTE: use xemora-re env DEFAULT: False
+#convert bam files to fasta for troubleshooting- NOTE: use Xenoquant-re env DEFAULT: False
 bam_to_fasta = False
 
 #Data extraction, filtering, and heptamer correction 
@@ -118,14 +114,11 @@ DECISION_THRESHOLD = 0.90         # Must be > 0.5
 # after (your real layout)
 kmer_table_path = "models/remora/9mer_10-4-1.tsv"
 
-#kmer_table_path = 'models/remora/9mer_10-4-1.tsv'
-#kmer_table_path = "/home/marchandlab/github/kaplanna/xemora/models/remora/9mer_10-4-1.tsv"
 
 
 
 #ml model (ConvLSTM_w_ref.py or Conv_w_ref.py')
 ml_model_path = 'models/ConvLSTM_w_ref.py'
-
 
 
 #Modified base in Fasta sequence you wish to train model or use model to basecall
@@ -199,12 +192,8 @@ max_bc_reads = 0
 
 
 
-#filter_mod_readIDs = '/home/marchandlab/DataAnalysis/Kaplan/raw/8letter/250731_8Letter_PB_GA_Ext/High-conf_training/8L-PG_H6_Highconf_reads_99.txt'
-#filter_mod_readIDs = '/home/marchandlab/DataAnalysis/Kaplan/raw/8letter/251210_8L_MixedPZ_train/demux_list/NB25_NB24_read_ids.txt'
 filter_mod_readIDs = ''
-filter_can_readIDs = '/home/marchandlab/DataAnalysis/Kaplan/training/2509_Signal_Plots/251226_GDsA_AT_Plots/can_set_demux/NB12_FWD_NB20_REV_read_ids.txt'
-#filter_can_readIDs = '/home/marchandlab/DataAnalysis/Kaplan/training/BSn/250831_GNT_TNC_training_demux/training_v1_800pod5/demux/NB13_FWD_NB11_REV_read_ids.txt' #for TNC
-#filter_readIDs_bc = '/home/marchandlab/DataAnalysis/Kaplan/raw/8letter/250731_8Letter_PB_GA_Ext/251203_8LT_training_demux/NB00_FWD_NB24_REV_read_ids.txt'
+filter_can_readIDs = ''
 filter_readIDs_bc = ''
 ############################################################
 

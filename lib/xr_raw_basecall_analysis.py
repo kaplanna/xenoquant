@@ -11,7 +11,7 @@ from tqdm import tqdm
 from xr_tools  import *
 from xr_params import *
 
-print('Xemora [Status] - Initializing Xemora Raw Basecall Analysis.')
+print('Xenoquant [Status] - Initializing Xenoquant Raw Basecall Analysis.')
 
 # Define working directories
 working_dir = os.path.expanduser(sys.argv[1])

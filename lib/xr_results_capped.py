@@ -11,7 +11,7 @@ from xr_params import *
 # USER SETTINGS — HARD-CODED DIRECTORIES
 # ======================================
 
-PARENT_DIR = "/home/marchandlab/DataAnalysis/Kaplan/basecall/8letter/251226_PB_Model-Testing/Mod"   # <-- EDIT THIS
+PARENT_DIR = "/Path/to/parent"   # <-- EDIT THIS
 MAX_ALIGNMENTS = 7500
 RANDOM_SEED = 42
 

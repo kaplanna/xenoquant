@@ -14,7 +14,7 @@ from xr_params import COL_STD, COL_MOD, COL_X_HIGHLIGHT, FLANK
 
 
 
-LEVELS_TXT = "/home/marchandlab/github/kaplanna/xemora/models/remora/9mer_10-4-1.tsv"
+LEVELS_TXT = "/path/to/9mer_10-4-1.tsv"
 CHROM = "contig1"
 N_READS = 75
 

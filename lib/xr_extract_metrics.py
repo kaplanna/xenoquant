@@ -13,10 +13,10 @@ from xr_params import FLANK  # ensures BED compatibility if needed
 # ============================
 # User parameters
 # ============================
-WORKDIR_DEFAULT = Path("/home/marchandlab/DataAnalysis/Kaplan/training/2509_Signal_Plots/250922_CNT_plots/Px-N")
+WORKDIR_DEFAULT = Path("/path")
 XNA_DEFAULT     = "S"
 CHROM           = "contig1"
-LEVELS_TXT      = "/home/marchandlab/github/kaplanna/xemora/models/remora/9mer_10-4-1.tsv"
+LEVELS_TXT      = "/path/to/9mer_10-4-1.tsv"
 N_READS         = 200
 ST_TRIM         = 1
 EN_TRIM         = 1

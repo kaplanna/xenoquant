@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # xr_sankey_pub_v4.py
 # ------------------------------------------------------------
-# Publication-ready Sankey for Xemora pipeline (Plotly version)
+# Publication-ready Sankey for Xenoquant pipeline (Plotly version)
 # ------------------------------------------------------------
 # - Strand-aware demux via BAM flag
 # - Clean neutral flows, colored stage nodes
@@ -19,11 +19,11 @@ from typing import Set, Dict, Tuple
 # === USER CONFIGURATION =====================================
 # ============================================================
 
-TOP_DIR = Path("/home/marchandlab/DataAnalysis/Kaplan/basecall/8letter/251210_H2-H3_Basecall/PG-Basecall_75_75")
-BOTTOM_DIR = Path("/home/marchandlab/DataAnalysis/Kaplan/basecall/8letter/251210_H2-H3_Basecall/ZC-Basecall_30_30_71mer_GA8L_model")
+TOP_DIR = Path("/top-strand-path")
+BOTTOM_DIR = Path("/bottom-strand-path")
 
-SAVE_NAME = "sankey_xemora_pipeline.pdf"
-TITLE = "Xemora Basecalling — 8L PCR Experiment"
+SAVE_NAME = "sankey_Xenoquant_pipeline.pdf"
+TITLE = "Xenoquant Basecalling — 8L PCR Experiment"
 
 # ============================================================
 # === COLOR PALETTE ==========================================

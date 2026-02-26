@@ -3,14 +3,6 @@
 """
 xr_fasta2x_rc.py 
 
-Title: Unpublished work
-
-Convert FASTA to xFASTA format for XNA base training. 
-Handles substitution of modified bases with canonical confounding bases
-and generates reverse-complement FASTAs when needed.
-
-By: H. Kawabe, N. Kaplan, J. A. Marchand
-Updated: 09/22/25
 """
 ########################################################################
 ########################################################################
@@ -23,7 +15,7 @@ from xr_params import *
 from xr_tools import fetch_xna_pos
 
 ########################################################################
-print("Xemora [Status] - Initializing Xemora...")
+print("Xenoquant [Status] - Initializing Xenoquant...")
 
 ########################################################################
 # Helpers
@@ -163,9 +155,9 @@ else:
 ########################################################################
 
 if detected_xfasta_header:
-    print("Xenomorph Status - [Error] Fasta input file already in xfasta format")
+    print("Xenoquant Status - [Error] Fasta input file already in xfasta format")
 elif not detected_xna:
-    print("Xenomorph Status - [Error] No XNAs detected in fasta input sequence.")
+    print("Xenoquant Status - [Error] No XNAs detected in fasta input sequence.")
 else:
     print("[xFASTA] Conversion complete.")
 

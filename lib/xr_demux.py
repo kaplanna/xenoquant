@@ -9,7 +9,7 @@ from xr_tools  import *
 from xr_params import *
 
 
-print('Xemora [Status] - Initializing Xemora Demux.')
+print('Xenoquant [Status] - Initializing Xenoquant Demux.')
 working_dir = os.path.expanduser(sys.argv[1])
 barcode_pair_csv = os.path.expanduser(sys.argv[2])
 demux_dir = check_make_dir(os.path.join(working_dir, 'demux'))
@@ -255,7 +255,7 @@ if RERUN_DEMUX:
             writer.writerow(["sample_id", "barcode_pair", "read_id"])
             writer.writerows(all_read_ids)
 
-    print('Xemora [Status]: Cutadapt demux completed.')
+    print('Xenoquant [Status]: Cutadapt demux completed.')
 
 else:
     # Skip demux, just load existing read_ids
@@ -265,7 +265,7 @@ else:
             f"No existing all_read_ids.csv found at {read_ids_csv}. "
             "Set RERUN_DEMUX=True to generate it."
         )
-    print(f'Xemora [Status]: Skipping demux. Using existing {read_ids_csv}.')
+    print(f'Xenoquant [Status]: Skipping demux. Using existing {read_ids_csv}.')
 
 # -------------------------------------------------------------------
 # Analysis section (unchanged)
@@ -314,7 +314,7 @@ print(f'Overall results saved to {overall_results_file}')
 
 if USE_DECISION_THRESHOLD:
     print(
-        f"Xemora [Status]: Reassigning basecalls with decision threshold = {DECISION_THRESHOLD}"
+        f"Xenoquant [Status]: Reassigning basecalls with decision threshold = {DECISION_THRESHOLD}"
     )
 
     reassigned_df = apply_hard_decision_threshold(

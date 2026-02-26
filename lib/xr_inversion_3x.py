@@ -6,14 +6,14 @@ import os
 # ============================
 # Hardcoded input CSVs
 # ============================
-MODEL1_CSV = "/home/marchandlab/DataAnalysis/Kaplan/basecall/DsPx/251217_D10_BC/TPxC-N-BC/demux/demux_per-read_modifications.tsv"  # Model 1: standard
-MODEL2_CSV = "/home/marchandlab/DataAnalysis/Kaplan/basecall/DsPx/251217_D10_BC/TDsC-N-BC/demux/demux_per-read_modifications.tsv"  # Model 2: RC 
-MODEL3_CSV = "/home/marchandlab/DataAnalysis/Kaplan/basecall/DsPx/251217_D10_BC/TDsC-Px-BC/demux/demux_per-read_modifications.tsv"  # Model 3: Px vs Ds
+MODEL1_CSV = "/path/to/demux_per-read_modifications.tsv"  # Model 1: standard
+MODEL2_CSV = "/path/to/demux_per-read_modifications.tsv"  # Model 2: RC 
+MODEL3_CSV = "/path/to/demux_per-read_modifications.tsv"  # Model 3: Px vs Ds
 
 
 
 
-OUTDIR = "/home/marchandlab/DataAnalysis/Kaplan/basecall/DsPx/251217_D10_BC/TPxC-Inversions"
+OUTDIR = "/output/directory"
 os.makedirs(OUTDIR, exist_ok=True)
 
 PER_READ_OUT = os.path.join(OUTDIR, "per_read_comparison.csv")

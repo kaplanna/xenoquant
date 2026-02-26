@@ -3,24 +3,7 @@
 """
 xr_basecall_methods.py 
 
-Title: Unpublished work
 
-Perform 'standard' single context basecalling as done prior except this version of the 
-script uses dorado and has the start for the single context consensus analysis 
-This script is method based and the main version of the single context / 
-reference anchored basecall
-
-Note: if you need to troubleshoot/change the consensus analysis, the script is 
-
-'xr_consensus_modifications.py' and the output file to analyze in the working directory output_modification_results.tsv
-
-
-
-
-
-By: H. Kawabe, N. Kaplan, J. Sumabat, J. A. Marchand
-
-Updated: 11/28/23
 """
 ########################################################################
 ########################################################################
@@ -42,7 +25,7 @@ model_file = os.path.expanduser(sys.argv[4])
 
 #########################################################################
 #Generate directories
-print('Xemora [Status] - Initializing Xemora basecalling.')
+print('Xenoquant [Status] - Initializing Xenoquant basecalling.')
 
 working_dir = check_make_dir(working_dir)
 ref_dir = check_make_dir(os.path.join(working_dir,'references'))
@@ -75,7 +58,7 @@ def xfasta_conversion(fasta_file, ref_dir):
         os.system(cmd)
         return xfasta_filepath
     else: 
-        print('Xemora  [ERROR] - Reference fasta xna file not file. Please check file exist or file path.')
+        print('Xenoquant  [ERROR] - Reference fasta xna file not file. Please check file exist or file path.')
         sys.exit()
 
 def validate_read_directory(raw_dir):
@@ -102,7 +85,7 @@ def validate_read_directory(raw_dir):
         uniques = list(set(ext_list))
         if (len(uniques) != 1):
             homogenous_files = False
-            print('Xemora [STATUS] - Passed reads directory not homogenous. Filetypes found: {}'.format(uniques))
+            print('Xenoquant [STATUS] - Passed reads directory not homogenous. Filetypes found: {}'.format(uniques))
         else:
             filetype = uniques[0]
             
@@ -127,7 +110,7 @@ def cod5_to_fast5(fast5_input, pod_dir, overwrite_pod):
         cmd = 'pod5 convert fast5 --force-overwrite '+fast5_input+'/*.fast5 -o '+pod5_output
         os.system(cmd)
     else:
-        print('Xemora [STATUS] - Skipping FAST5 conversion')
+        print('Xenoquant [STATUS] - Skipping FAST5 conversion')
     return pod5_output
 
 #Merge pod5 files
@@ -146,7 +129,7 @@ def pod5_merge(pod5_input, pod_dir, overwrite_pod):
         cmd = 'pod5 merge --force-overwrite '+ pod5_input+'/*.pod5 -o ' + merged_pod5
         os.system(cmd)
     else:
-        print('Xemora [STATUS]- Skipping POD5 merge')
+        print('Xenoquant [STATUS]- Skipping POD5 merge')
     return merged_pod5
     
 def dorado_basecall(dorado_path, dorado_model, min_qscore, pod_dir, bam_directory, basecall_pod, max_reads, filter_readIDs):
@@ -171,7 +154,7 @@ def dorado_basecall(dorado_path, dorado_model, min_qscore, pod_dir, bam_director
     output_bam = os.path.join(bam_directory, 'bc.bam')
     
     if basecall_pod or not os.path.exists(output_bam):
-        print('Xemora [STATUS] Performing basecalling using Dorado')
+        print('Xenoquant [STATUS] Performing basecalling using Dorado')
         #Base arguments
         dorado_args = f'--no-trim --emit-moves  {pod_dir}'
 
@@ -189,12 +172,12 @@ def dorado_basecall(dorado_path, dorado_model, min_qscore, pod_dir, bam_director
         # Add Dorado summary step here after basecalling
         summary_cmd = 'dorado summary -v {} > {}'.format(output_bam, os.path.join(bam_directory, 'sequencing_summary.txt'))
         os.system(summary_cmd)
-        print('Xemora [STATUS] - Dorado summary saved to sequencing_summary.txt.')
+        print('Xenoquant [STATUS] - Dorado summary saved to sequencing_summary.txt.')
         
         return output_bam
         
     else:
-        print('Xemora [STATUS] - Skipping POD5 basecalling for modified bases.')
+        print('Xenoquant [STATUS] - Skipping POD5 basecalling for modified bases.')
         return output_bam
 
 
@@ -294,7 +277,7 @@ def get_primary_alignments(bam_file):
 def bed_gen(input_fasta, xna_base, sub_base, chunk_range, chunk_shift): 
     output_bed = os.path.join(os.path.dirname(input_fasta), xna_base + '.bed')
     if os.stat(input_fasta).st_size == 0:
-        print('Xemora  [ERROR] - Empty xfasta file generated.')
+        print('Xenoquant  [ERROR] - Empty xfasta file generated.')
         sys.exit()
     else:
         with open(output_bed, "w") as fr, open(input_fasta, "r") as fo:
@@ -348,7 +331,7 @@ def generate_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_cont
     chunk_file = os.path.join(chunk_dir, 'basecall_chunks.npz')
     if regenerate_chunks == True:
         '''
-        print('Xemora  [STATUS] - Generating chunks for modified basecalling.')
+        print('Xenoquant  [STATUS] - Generating chunks for modified basecalling.')
         cmd = 'remora \
           dataset prepare \
           '+os.path.join(mod_pod_dir,os.path.basename(raw_dir))+'.pod5'+' \
@@ -363,7 +346,7 @@ def generate_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_cont
           --chunk-context '+chunk_context
         os.system(cmd)
         '''
-        print('Xemora [STATUS] - Generating chunks for modified basecalling.')
+        print('Xenoquant [STATUS] - Generating chunks for modified basecalling.')
         # No motif
         cmd = (
             'remora '
@@ -385,22 +368,22 @@ def generate_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_cont
         return chunk_file
 
     else:
-        print('Xemora [STATUS] - Skipping chunk generation')
+        print('Xenoquant [STATUS] - Skipping chunk generation')
         return chunk_file
 
-def xemora_basecall(working_dir, chunk_file, model_file):
+def Xenoquant_basecall(working_dir, chunk_file, model_file):
     """
-    xemora_basecall takes in the generate chunk file and a Xemora model and performs 
+    Xenoquant_basecall takes in the generate chunk file and a Xenoquant model and performs 
     inference on the chunk file to determine is XNAs are present 
     
     Parameters: 
     working_dir - output directory inference files
     chunk_file - file pathway to a Remora chunk file 
-    model_file - file pathway to a Xemora model 
+    model_file - file pathway to a Xenoquant model 
     
     Returns: 
     """
-    print('Xemora  [STATUS] - Performing basecalling.')
+    print('Xenoquant  [STATUS] - Performing basecalling.')
     try:
         per_read_output = os.path.join(remora_output_dir, 'per-read_modifications.tsv')
         summary_output = os.path.join(remora_output_dir, 'summary_modifications.tsv')
@@ -413,14 +396,14 @@ def xemora_basecall(working_dir, chunk_file, model_file):
           --out-file '+summary_output
         os.system(cmd)
 
-        print('Xemora [STATUS] - Basecalling done.')
-        print('Xemora [STATUS] - Basecalling done. Saving results '+per_read_output)
-        print('Xemora [STATUS] - Basecalling done. Saving results '+summary_output)
-        #print('Xemora [STATUS] - Exiting')
+        print('Xenoquant [STATUS] - Basecalling done.')
+        print('Xenoquant [STATUS] - Basecalling done. Saving results '+per_read_output)
+        print('Xenoquant [STATUS] - Basecalling done. Saving results '+summary_output)
+        #print('Xenoquant [STATUS] - Exiting')
         return per_read_output, summary_output
         
     except: 
-        print('Xemora [ERROR] - Failed to initialize basecalling model Check logs.')
+        print('Xenoquant [ERROR] - Failed to initialize basecalling model Check logs.')
         sys.exit()
         
 def add_per_read_mapping(primary_alignments, per_read_modifications):
@@ -461,7 +444,7 @@ def filter_softclip_bam(
     """
 
     print(
-        "Xemora [STATUS] - Filtering alignments by soft clipping:\n"
+        "Xenoquant [STATUS] - Filtering alignments by soft clipping:\n"
         f"  max_total_softclip_frac = {max_total_softclip_frac}\n"
         f"  max_end_softclip_frac   = {max_end_softclip_frac}\n"
         f"  min_aligned_frac        = {min_aligned_frac}"
@@ -523,7 +506,7 @@ def filter_softclip_bam(
     os.remove(tmp_bam)
 
     print(
-        f"Xemora [STATUS] - Softclip filter kept "
+        f"Xenoquant [STATUS] - Softclip filter kept "
         f"{kept}/{total} reads ({kept/total:.2%})"
     )
 
@@ -550,7 +533,7 @@ def main():
     elif filetype == 'pod5':
         merged_pod5 = pod5_merge(raw_dir, mod_pod_dir, overwrite_pod)
     else:
-        print('Xemora [ERROR] - filetype in raw data directory is not POD5 or FAST5, please check if your directory is correct') 
+        print('Xenoquant [ERROR] - filetype in raw data directory is not POD5 or FAST5, please check if your directory is correct') 
         sys.exit()
     
     #Perform basecalling using Dorado
@@ -580,8 +563,8 @@ def main():
     basecalling_chunks = generate_chunks(merged_pod5, aligned_bam, chunk_dir, bed_file, mod_base, kmer_context, kmer_table_path, regenerate_chunks)
     
 
-    #Run Xemora validate
-    per_read_mod, summary_mod = xemora_basecall(working_dir, basecalling_chunks, model_file)
+    #Run Xenoquant validate
+    per_read_mod, summary_mod = xenoquant_basecall(working_dir, basecalling_chunks, model_file)
     per_read_mod = add_per_read_mapping(primary_alignments, per_read_mod)
 
 if __name__ == "__main__":

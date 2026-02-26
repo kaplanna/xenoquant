@@ -26,11 +26,11 @@ from xr_params import COL_STD, COL_MOD, COL_X_HIGHLIGHT, FLANK
 # === USER PARAMETERS ========================================
 # ============================================================
 WORKDIR_DEFAULT = Path(
-    "/home/marchandlab/DataAnalysis/Kaplan/training/2509_Signal_Plots/250922_CNT_plots/Px-N"
+    ""
 )
 XNA_DEFAULT = "S"
 CHROM = "contig1"
-LEVELS_TXT = "/home/marchandlab/github/kaplanna/xemora/models/remora/9mer_10-4-1.tsv"
+LEVELS_TXT = "/path/to/9mer_10-4-1.tsv"
 N_READS = 500
 
 # ============================================================
