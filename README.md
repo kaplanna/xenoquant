@@ -269,10 +269,10 @@ In xFASTA:
 
 Default substitutions:
 
-B → G  
-S → C  
+B → A
+S → T
 P → G  
-Z → G  
+Z → C
 
 Substitution rules are configurable in:
 
@@ -280,14 +280,13 @@ lib/xr_params.py
 
 Allowed XNA abbreviations (default):
 
-B, S, P, Z, X, K, J, V  
+B, S, P, Z, D, X 
 
 Default pairing rules:
 
 B:S  
 P:Z  
-X:K  
-J:V  
+Ds:Px
 
 ---
 
