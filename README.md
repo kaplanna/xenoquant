@@ -1,106 +1,247 @@
-```                                                                                  
+# xenoquant
 
-██╗  ██╗███████╗███╗   ███╗ ██████╗ ██████╗  █████╗ 
-╚██╗██╔╝██╔════╝████╗ ████║██╔═══██╗██╔══██╗██╔══██╗
- ╚███╔╝ █████╗  ██╔████╔██║██║   ██║██████╔╝███████║
- ██╔██╗ ██╔══╝  ██║╚██╔╝██║██║   ██║██╔══██╗██╔══██║
-██╔╝ ██╗███████╗██║ ╚═╝ ██║╚██████╔╝██║  ██║██║  ██║
-╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
-                                                    
-```
+xenoquant is a neural network training and inference pipeline for nanopore sequencing of alternative base pairs (XNAs). It builds on Oxford Nanopore Technologies (ONT) workflows and Remora to enable reference-localized detection and quantification of non-standard nucleotides. The toolkit preprocesses FAST5/POD5 data, performs alignment, generates training chunks, and trains recurrent neural network models for XNA-aware basecalling.
 
-# Xemora : An XNA sequencing neural network trainer 
+xenoquant supports training on defined sequence contexts and performing reference-based XNA identification using trained models. The general workflow consists of two primary steps:
 
-## About 
-Xemora is a tool pipeline used for nanopore sequencing of alternative basepairs (XNAs) that latches onto Remora 2.0 (ONT). This toolkit incorporates ONT-workflows to preprocess fast5, pod5, fastq, bam, and bed files for training a remora model. XNA sequence handling is done using the xFASTA format. Therefore, FASTA reference inputs should contain XNA bases in sequence lines. Models for basecalling can be trained on specific set of sequences (rather than entire sequence space). For optimal implementation, xemora should be trained on at least two datasets, with and without the XNA substitutions. Xemora models can be exported and used as remora models for guppy, dorado, or bonito basecalling. Alternatively, xemora can handle reference-based XNA identification directly. The general pipeline consists of two steps: 1) Training xemora on a reference set of reads with and without XNAs 2) basecalling using the trained model. 
+1) Train a model using reference datasets with and without XNA substitutions  
+2) Basecall new reads using the trained model  
 
-Xemora command groups (additional help available within each command group):
-	train		[Train] a xemora model on a set of input fast5 reads, localized to reference fasta containing XNAs. 
-	basecall	[Basecall] a fast5 reads around XNA using a previously trained xemora model. 
+This software has been tested on ONT R9.4.1 and R10.4.1 flow cells (Flongle and MinION) using Remora 2.x. The project is under active development.
 
+---
 
-This version of Xenomorph was built and tested on Oxford Nanopore Technologies r9.4.1 and r10.4.1 flow cells (Flongle/MinION) using Remora 2.0. xemora is currently under development and for testing purposes only.
+## Overview
 
-This repository is maintained by the XenoBiology Research Group at the University of Washington, Department of Chemical Engineering. 
+xenoquant enables:
 
-## Sample nanopore sequences with XNA basepairs 
-This toolkit was created to work with a series of non-standard nucleotides that can form the basis of an expanded genetic alphabet (up to 12 letters). In addition to the standard base pairs (A:T, G:C), the XNA models described in this work allow for single xenonucleotide detection of specific forms of B:S, P:Z, X:K, and J:V. Sample nanopore XNA sequences with each of these base pairs encoded can be downloaded from the Sequence Reads Archive (SRA Bioproject: PRJNA932328). More information can be found with the associate publication.
+- Training Remora-compatible RNN models for detecting specific XNA substitutions
+- Reference-localized XNA identification
+- Export of trained models for use with Dorado, Guppy, or Bonito (via Remora compatibility)
+- Handling of non-standard bases using the xFASTA format
+
+Models are trained on specific sequence contexts rather than the full sequence space. For best performance, training should include:
+
+- One dataset containing XNA substitutions
+- One dataset containing the corresponding canonical DNA sequence
+
+---
+
+## Command Groups
+
+xenoquant provides two primary commands:
+
+train      Train a xenoquant model on input FAST5 reads using reference sequences containing XNAs.  
+basecall   Basecall FAST5 reads around XNA positions using a trained xenoquant model.  
+
+Additional help is available within each command.
+
+---
 
 ## Dependencies
-Xemora requires ONT tools (ont-fast5-api, tombo, guppy, remora 2.0), minimap2 (mappy), and various python packages. A full list of dependencies can be found in the xemora-env.yml document. To use conda for installing dependencies, simply load xemora-env.yml into a new environment. Xemora was built and tested on Ubuntu 18.04 and 20.04. 
 
-        conda env create -f xemora-env.yml
+xenoquant requires:
 
-To enter xemora conda environment, then use: 
+- ONT tools (ont-fast5-api, guppy or dorado, Remora 2.x)
+- minimap2 (mappy)
+- Standard Python scientific packages
 
-        conda activate xemora-env
+A full dependency list is provided in the environment file.
 
+Tested on Ubuntu 18.04 and 20.04.
 
-## Xemora command groups 
-	train		[Train] a xemora model on a set of input fast5 reads, localized to reference fasta containing XNAs. 
-	basecall	[Basecall] a fast5 reads around XNA using a previously trained xemora model. 
+---
 
+## Training
 
-### Train
-Xemora train takes raw nanopore multi-FAST5 and reference sequences in FASTA format as inputs. To train a xemora model, two sets of fast5 reads/fasta references are required. 1) a set of fast5 reads that contain an XNA with a reference fasta file contains the location of the XNA (indicated by XNA base abbreviation BSPZXKJV); 2) a set of fast5 reads that contain a standard nucleic acid with a reference fasta file that contains the location of comparison (indicated by XNA base abbreviation BSPZXKJV). Though two sets of fasta files are required, model training can be performed from data in a mixed run if reads are properly barcoded. In this event, the same fast5 file can be used as the input. If the two set of data contain the same sequences (but with the XNA position substituted), the same reference file can be used as input. Note: Reference fasta for standard DNA sequences requires XNA sequences in the location of training for specifying model focus region. 
+The `train` command builds a model using two sets of nanopore reads:
 
-The full training pipeline follows Remora 2.0 procedure. Fast5 files are first converted to Pod5 format. Pod5 files are basecalled using guppy and reference aliged. Bed files are generated from the reference files following fasta to xfasta conversion to indicate positions for model training. Remora chunks are then generated for the XNA sequences and the standard DNA sequences. Chunks are merged in preparation for training. Training proceeds using LTST RNN model with 64 base layers. Model output with checkpoints can be found in the output directory /model folder. 
+1) Reads containing the XNA substitution  
+2) Reads containing the canonical DNA comparison  
 
+Each dataset requires a reference FASTA file. Reference FASTA files must contain the XNA base abbreviation in the sequence to define the model focus position.
 
-        python xemora.py train -w [output directory] -f [xna_fast5_diretory] [dna_fast5_directory] -r [xna reference_fasta] [dna_reference_fasta] 
+If both datasets share identical sequence context (with only the XNA position substituted), the same reference file may be reused.
 
-### Basecall
-Xemora basecall uses the remora validate.py to basecall on a set of chunks data. As inputs, users need to specify an output directory, a raw fast5 directory, a reference fasta file (with XNAs in positions to basecall), and a model file (model_file.pt) generated by xemora train. An initial set of basecalls is handled by ONT guppy, which is then used for alignment. The output directory is used to store preprocessing files (.pod5, .bam, .bed) and generate two summary results file: a full run summary file and a per-read results file. The per-read results are stored as a tab seperated file and indicate read id, position in alignment where XNA was found, reference base (1 = XNA, 0 = DNA), basecall (1 = XNA, 0 = DNA), and matching probability for DNA,XNA base at that position.
+### Training Pipeline
 
-        python xemora.py basecall -w [output directory] -f [xna_fast5_diretory] -r [xna reference_fasta] -m [model_file.pt]
+The training workflow follows the Remora 2.x procedure:
 
+1. Convert FAST5 to POD5  
+2. Perform initial basecalling  
+3. Align reads to reference  
+4. Convert FASTA → xFASTA  
+5. Generate BED files indicating XNA positions  
+6. Generate Remora chunks for XNA and DNA datasets  
+7. Merge chunks  
+8. Train LTST RNN model (64 base layers)  
 
+Model checkpoints and outputs are written to:
 
-### X(R)emora Models
-Xemora generates LTST RNN models that can either be used by various basecallers. Since xemora is built around reference-based basecalling of XNAs, models generated are not intended to be universallly applied to any sequence context. Chunks used for training are set to +/-50 datapoints before and after the specified XNA position in the reference bed file. The sequence context this corresponds to is variable, but can range from +/- 5-10 bases. Though xemora is trained on a specific sequence context, it does not use standard 'motif driven' model workflow which specifies region of testing. Instead, xemora modifications are treated as a global modification on a specified standard base (e.g., any G could be a P), with the location of testing specified by regions denoted as modified in the reference .bed file. This means xemora models can be trained on any arbitrary set of sequence contexts, modifications, and alternative substitutions but will only be valid for the subset of sequence contexts it was trained on. It is recommended that model basecalling be verified on new sequences where the modification being tested is in a slightly different global context (i.e., changing bases distal to XNA positions). Note that model validity does not extend across flow cell types (r9.4.1 vs r10.4.1), so training data should be ran on the flow cells that will ultimately be used for base calling. Though not recommended since xemora trains on pseudo-motifs, models can be converted to bonito or dorado models for use with other basecallers using remora. 
+[output_directory]/model
 
-### About xFASTA format 
-Many tools used to read and manipulate nucleic acid sequences are not built to handle non ATGC bases. In an effort to streamline how we handle XNAs, xemora was built to handle non-standard bases in FASTA sequences (e.g. BSPZJVKX). The xFASTA file format (.fa) stores XNA positional information in the header of each sequence. xFASTA files can be generated from standard Fasta files that contain non-ATGC bases (e.g. BSPZJVKX) in the sequence. xFASTA files are automatically generated in the standard xemora preprocessing workflow. The fasta2x command is provided for utility, but generally not required. Note that XNA bases in the input sequence will be replaced for a standard ATGC. Signal matching to sequence is highly sensitive what base is chosen as the replacement base. As default, XNA bases are replaced as followed: B>G, S>C, P>G, Z>G. Base substitution settings can be modified in lib/xr_params.py by changing the paired base in the confounding_base variable. 
+Final model file:
 
+model_best.pt
 
-        Standard FASTA format with XNA in sequence
-                >header_for_a_read
-                ATGGCAACAGGATGABAAGGACGTA
+### Training Command
 
-        xFASTA format with XNA information stored in header. (B replaced with G in sequence)
-                >header_for_a_read+X_POS[B:18]
-                ATGGCAACAGGATGAGAAGGACGTA
+python xenoquant.py train \
+    -w [output_directory] \
+    -f [xna_fast5_directory] [dna_fast5_directory] \
+    -r [xna_reference.fa] [dna_reference.fa]
 
-### Modifying parameters and default paths
-Parameters, defaults, and file paths can be tuned or modified for desired application. Allowed XNA base abbreviations are by default B,S,P,Z,X,K,J,V with the following base pairing rules (B:S, P:Z, X:K, J:V). Though default parameters and bases are recommended for most applications, parameters can be modified by editing lib/xr_params.py. 
+---
 
+## Basecalling
 
+The `basecall` command applies a trained model to new reads.
 
-## Examples
+Inputs required:
 
-#### Train a xemora model
+- Output directory  
+- FAST5 directory  
+- Reference FASTA (must include XNA positions in sequence)  
+- Trained model file (.pt)  
 
+Processing steps:
 
-        1) Preprocess two sets of raw nanopore runs and train model (generates: pod5,fastq, bam, bed, chunks for each then trains model)
-            python xemora.py train -w path/to/output_directory -f path/to/xna_fast5_directory path/to/dna_fast5_directory  -r path/to/xna_fasta_reference.fa path/to/dna_fasta_reference.fa 
-        *) Xemora trained model (from remora output) will be output to path/to/output_directory/model. 
-        **) Model for xemora basecalling will be generated as path/to/output_directory/model/best_model.pt. 
-        ***) Both fasta file inputs need to contain XNA of interest in sequence field for specifying location of model training 
+1. Convert FAST5 → POD5  
+2. Perform initial basecalling  
+3. Align reads  
+4. Generate BED regions from reference  
+5. Generate chunks  
+6. Apply trained model to XNA positions  
 
+Outputs include:
 
-#### Basecall using xemora model
+- Preprocessing files (.pod5, .bam, .bed)  
+- Full run summary file  
+- Per-read results file (TSV)  
 
+The per-read TSV includes:
 
-        1) Basecall set of reads using specified model (generates: pod5,fastq, bam, bed, chunks then applies trained model around specified locations in bed file)
-            python xemora.py basecall -w path/to/output_results_directory -f path/to/fast5_directory -r path/to/fasta_reference -m path/to/training_directory/model/best_model.pt. 
-        *) Fasta file input needs to contain XNA of interest in sequence field for specifying location of basecalling. 
-        **) Initial basecalling handled by guppy.
+- read_id  
+- alignment position  
+- reference label (1 = XNA, 0 = DNA)  
+- predicted class (1 = XNA, 0 = DNA)  
+- class probabilities  
 
+### Basecalling Command
 
+python xenoquant.py basecall \
+    -w [output_directory] \
+    -f [fast5_directory] \
+    -r [reference.fa] \
+    -m [model_file.pt]
 
+---
 
-## Cite us or read more about this work 
-    Title: Unpublished work
+## Model Characteristics
 
-    By: H. Kawabe, N. Kaplan, J. A. Marchand
+xenoquant generates LTST RNN models trained on ±50 signal datapoints around the XNA position defined in the BED file. The corresponding sequence context typically spans ±5–10 bases.
 
+Important notes:
+
+- Models are context-specific and valid only for sequence contexts represented in training data  
+- Models do not generalize across flow cell chemistries (e.g., R9.4.1 vs R10.4.1)  
+- Validation on new sequence contexts is strongly recommended  
+- Models may be converted for use with other ONT basecallers via Remora  
+
+---
+
+## xFASTA Format
+
+Many sequence tools do not support non-ATGC bases. xenoquant uses the xFASTA format to encode XNA positions in the FASTA header.
+
+### Standard FASTA with XNA
+
+>read_header  
+ATGGCAACAGGATGABAAGGACGTA
+
+### xFASTA Format
+
+>read_header+X_POS[B:18]  
+ATGGCAACAGGATGAGAAGGACGTA
+
+In xFASTA:
+
+- The XNA position is stored in the header  
+- The sequence line contains a substituted canonical base  
+
+Default substitutions:
+
+- B → G  
+- S → C  
+- P → G  
+- Z → G  
+
+Substitution rules can be modified in:
+
+lib/xr_params.py
+
+Allowed XNA abbreviations (default):
+
+B, S, P, Z, X, K, J, V
+
+Default pairing rules:
+
+B:S  
+P:Z  
+X:K  
+J:V  
+
+---
+
+## Parameter Customization
+
+Default parameters, paths, and base substitutions can be modified in:
+
+lib/xr_params.py
+
+Users may adjust:
+
+- Confounding base substitutions  
+- Model window sizes  
+- Allowed XNA bases  
+- Workflow defaults  
+
+---
+
+## Example Workflows
+
+### Train a Model
+
+python xenoquant.py train \
+    -w path/to/output_directory \
+    -f path/to/xna_fast5_directory path/to/dna_fast5_directory \
+    -r path/to/xna_reference.fa path/to/dna_reference.fa
+
+Outputs:
+
+- Preprocessed files  
+- Model checkpoints  
+- model_best.pt in output_directory/model  
+
+Note: Both FASTA references must contain the XNA base in the sequence field.
+
+---
+
+### Basecall Using a Trained Model
+
+python xenoquant.py basecall \
+    -w path/to/output_results_directory \
+    -f path/to/fast5_directory \
+    -r path/to/reference.fa \
+    -m path/to/training_directory/model/model_best.pt
+
+Note:
+
+- FASTA reference must contain the XNA base to define evaluation positions  
+- Initial basecalling is handled by Guppy or Dorado  
+
+---
+
+## Status
+
+xenoquant is under active development. Use for research and testing purposes.
