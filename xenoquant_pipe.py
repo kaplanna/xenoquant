@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 ########################################################################
-# xemora_pipe.py
+# xenoquant_pipe.py
 # ------------------------------------------------------------
-# Master orchestration script for Xemora workflows:
+# Master orchestration script for Xenoquant workflows:
 #  - Model training
 #  - Basecalling
 #  - Alignment result extraction
@@ -100,16 +100,16 @@ SCRIPT_EXTRACT   = str((HERE / "lib/xr_extract_metrics.py").resolve())
 # === CORE PIPELINE ==========================================
 # ============================================================
 
-# --- 1. Train Xemora model ---
+# --- 1. Train model ---
 if train_model:
-    cmd = [PY, "xemora.py", "train", "-w", working_dir,
+    cmd = [PY, "xenoquant.py", "train", "-w", working_dir,
            "-f", xna_fast5_dir, dna_fast5_dir,
            "-r", xna_ref_fasta, dna_ref_fasta]
     run(cmd)
 
 # --- 2. Basecall reads ---
 if basecall_reads:
-    cmd = [PY, "xemora.py", "basecall",
+    cmd = [PY, "xenoquant.py", "basecall",
            "-w", bc_working_dir,
            "-f", bc_fast5_dir,
            "-r", bc_xna_ref_fasta,
