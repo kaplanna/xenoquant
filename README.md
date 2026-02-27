@@ -59,8 +59,7 @@ lib/
 
 xenoquant requires:
 
-- dorado (github.com/nanoporetech/dorado)
-- remora 2.X (github.com/nanoporetech/remora)
+- [dorado](github.com/nanoporetech/dorado)
 
 A full dependency list is provided in the environment file.
 
