@@ -59,10 +59,8 @@ lib/
 
 xenoquant requires:
 
-- ONT tools (guppy or dorado, Remora 2.x)
-- minimap2 (mappy)
-- cutadapt (for demultiplexing)
-- Standard Python scientific libraries
+- dorado (github.com/nanoporetech/dorado)
+- remora 2.X (github.com/nanoporetech/remora)
 
 A full dependency list is provided in the environment file.
 
