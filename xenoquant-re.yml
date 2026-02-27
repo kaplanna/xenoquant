@@ -1,4 +1,4 @@
-name: xemora-re
+name: xenoquant-re
 channels:
   - conda-forge  # Moved to top for preference
   - bioconda
@@ -64,4 +64,4 @@ dependencies:
       - seaborn==0.12.2
       - NanoPlot==1.42.0
       - cutadapt
-prefix: /opt/anaconda3/envs/xemora-re
+prefix: /opt/anaconda3/envs/xenoquant-re
