@@ -25,19 +25,28 @@ from lib.xr_params import *
 # ============================================================
 
 # --- Training paths ---
-working_dir = '/home/marchandlab/DataAnalysis/Kaplan/training/2509_Signal_Plots/251226_GDsA_AT_Plots/DsA'
-xna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/DsPx/241209_G-Ds-A_Px-diol/20241209_1728_MN41475_AXC204_509514cb/1_pod5_test'
-xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/DsPx/241209_G-Ds-A_Px-diol/reference/GDsA_60mer.fasta'
-dna_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/DsPx/241210_GAA_CAT_xr_train/20241210_1413_MN37138_AWF246_a6bf4d1f/50_pod5_test'
-dna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/DsPx/241209_G-Ds-A_Px-diol/reference/GDsA_60mer.fasta'
+working_dir = "./SAMPLE_OUTPUT/sample_training/B_vs_A"
+xna_fast5_dir = "./SAMPLE_DATA/Training_Testing/pod5/BS_Train_subset"
+xna_ref_fasta = "./SAMPLE_DATA/Training_Testing/references/90mer_train_test.fasta"
+dna_fast5_dir = "./SAMPLE_DATA/Training_Testing/pod5/AT_Train_subset"
+dna_ref_fasta = "./SAMPLE_DATA/Training_Testing/references/90mer_train_test.fasta"
 
 # --- Basecall paths ---
-bc_working_dir = '/home/marchandlab/DataAnalysis/Kaplan/basecall/8letter/251219_H9-11_BC/BN_Ext-Train_5050_Basecall'
-bc_fast5_dir = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/251218_H9-11_8L-Troubleshooting/20251218_1456_MN37138_BAN504_70d2149b/pod5'
-bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/251218_H9-11_8L-Troubleshooting/reference/REF_H9-11_BN.fasta'
-barcode_pair_csv = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/240816_B13_pH_Rerun_2/reference/DEMUX_B13.csv'
-bc_model_file = '/home/marchandlab/DataAnalysis/Kaplan/training/8L/251207_8LT_ext_NN_train_demux/BN-Train/model/model_best.pt'
+bc_working_dir = "./SAMPLE_OUTPUT/sample_testing/Mod_Dataset_B_vs_A"
+bc_fast5_dir = "./SAMPLE_DATA/Training_Testing/pod5/BS_Test_subset"
+bc_xna_ref_fasta = "./SAMPLE_DATA/Training_Testing/references/90mer_train_test.fasta"
+barcode_pair_csv = "" # Note: no barcodes for this dataset
+bc_model_file = "./output/sample_training/B_vs_A/model/model_best.pt"
 
+#Sample configuration for basecalling sample PCR data:
+'''
+# --- Basecall paths ---
+bc_working_dir = "./SAMPLE_OUTPUT/sample_pcr/B24_B25"
+bc_fast5_dir = "./SAMPLE_DATA/PCR/pod5"
+bc_xna_ref_fasta = "./SAMPLE_DATA/PCR/references/REF_B24_B25.fasta"
+barcode_pair_csv = "./SAMPLE_DATA/PCR/references/DEMUX_B24_B25.csv"
+bc_model_file = "./output/sample_training/B_vs_A/model/model_best.pt"
+'''
 # ============================================================
 # === MASTER SWITCHES ========================================
 # ============================================================
