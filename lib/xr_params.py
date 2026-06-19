@@ -162,7 +162,7 @@ min_overlap = 14 # default 14
 min_len = 120 # default 120
 max_len = 200 # default 200
 #Full barcode list
-barcode_list = "NB_BARCODES.csv"
+barcode_list = "lib/NB_BARCODES.csv"
 ############################################################
 # New parameters for xr_train_methods.py
 overwrite_pod = False
