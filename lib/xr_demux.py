@@ -17,7 +17,6 @@ fastq_dir = check_make_dir(os.path.join(demux_dir, 'fastq'))
 mod_dir = os.path.join(working_dir,'preprocess')
 mod_bam_dir = os.path.join(mod_dir,'bam')
 bc_bam = os.path.join(mod_bam_dir,'bc.bam')
-barcode_list = "./demux/barcode_files/NB_BARCODES.csv"
 
 
 def reverse_complement(seq):
