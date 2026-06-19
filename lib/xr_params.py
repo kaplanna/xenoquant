@@ -40,7 +40,7 @@ write_gaps = False
 ##Analysis instructions 
 
 #Re-basecall pod5 file. Required if new reference files are being used. 
-basecall_pod = False
+basecall_pod = True
 
  # Set True to rerun cutadapt demux, False to skip and reuse existing outputs
 RERUN_DEMUX = False 
@@ -67,7 +67,7 @@ sam_corrections = True
 sam_convert = True
 
 #Re-generate training or basecalling chunks.
-regenerate_chunks = False
+regenerate_chunks = True
 
 #Generate chunks using basecall anchor (default: False)
 bc_anchor = False
@@ -76,7 +76,7 @@ bc_anchor = False
 remerge_chunks = True
 
 #Build model using Remora 
-gen_model = False
+gen_model = True
 
 
 # ============================
@@ -164,7 +164,7 @@ max_len = 200 # default 200
 
 
 ############################################################
-# New parameters for xr_train_methods.py from Jayson
+# New parameters for xr_train_methods.py
 overwrite_pod = False
 dorado_path = '~/dorado-0.8.0-linux-x64/bin/dorado'
 dorado_model = '~/dorado-0.8.0-linux-x64/models/dna_r10.4.1_e8.2_400bps_hac@v5.0.0'
