@@ -371,9 +371,9 @@ def generate_chunks(pod_file, bam_file, chunk_dir, bed_file, mod_base, kmer_cont
         print('Xenoquant [STATUS] - Skipping chunk generation')
         return chunk_file
 
-def Xenoquant_basecall(working_dir, chunk_file, model_file):
+def xenoquant_basecall(working_dir, chunk_file, model_file):
     """
-    Xenoquant_basecall takes in the generate chunk file and a Xenoquant model and performs 
+    xenoquant_basecall takes in the generate chunk file and a Xenoquant model and performs 
     inference on the chunk file to determine is XNAs are present 
     
     Parameters: 
