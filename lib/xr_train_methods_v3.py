@@ -322,7 +322,7 @@ def merge_chunks(chunk_dir, mod_chunks, can_chunks, balance_chunks):
     os.system(cmd)
     return out
 
-def Xenoquant_training(model_dir, training_chunks):
+def xenoquant_training(model_dir, training_chunks):
     if not gen_model:
         print('Xenoquant [STATUS] - Skipping model training')
         return os.path.join(model_dir, 'model_best.pt'), os.path.join(model_dir, 'validation.log')
@@ -489,7 +489,7 @@ def main():
     training_chunk_path = merge_chunks(chunk_dir, mod_chunk_path, can_chunk_path, balance_chunks)
 
     # Step 6: Train
-    model_path, validation_log_path = Xenoquant_training(model_dir, training_chunk_path)
+    model_path, validation_log_path = xenoquant_training(model_dir, training_chunk_path)
 
 if __name__ == "__main__":
     main()
