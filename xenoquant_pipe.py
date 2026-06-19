@@ -38,16 +38,15 @@ bc_xna_ref_fasta = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/251218_H9-11_
 barcode_pair_csv = '/home/marchandlab/DataAnalysis/Kaplan/raw/xPCR/240816_B13_pH_Rerun_2/reference/DEMUX_B13.csv'
 bc_model_file = '/home/marchandlab/DataAnalysis/Kaplan/training/8L/251207_8LT_ext_NN_train_demux/BN-Train/model/model_best.pt'
 
-#bc_model_file = working_dir+'/model/model_best.pt'
 # ============================================================
 # === MASTER SWITCHES ========================================
 # ============================================================
 
-train_model              = False
+train_model              = True
 basecall_reads           = True
-output_alignment_results = False
-cutadapt_demux           = False
-raw_basecall_analysis    = True
+output_alignment_results = True
+cutadapt_demux           = True
+raw_basecall_analysis    = False
 
 # --- Visualization switches ---
 plot_signal_metrics    = False   # calls xr_signal_metrics.py
