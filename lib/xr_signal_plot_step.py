@@ -6,6 +6,7 @@
 # ------------------------------------------------------------
 
 from pathlib import Path
+import csv
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,9 +18,9 @@ from xr_params import COL_STD, COL_MOD, COL_X_HIGHLIGHT, FLANK
 # ============================================================
 # === USER PARAMETERS ========================================
 # ============================================================
-WORKDIR_DEFAULT = Path("/path")
+WORKDIR_DEFAULT = Path("/home/marchandlab/DataAnalysis/Kaplan/training/2509_Signal_Plots/250922_CNT_plots/Px-N")
 XNA_DEFAULT     = "S"
-LEVELS_TXT      = "/path/to/9mer_10-4-1.tsv"
+LEVELS_TXT      = "/home/marchandlab/github/kaplanna/xemora/models/remora/9mer_10-4-1.tsv"
 CHROM           = "contig1"
 N_READS         = 500
 ST_TRIM         = 1
@@ -246,12 +247,29 @@ def main():
 
         fig.tight_layout()
         out_stem = f"{workdir.name}_{xna}_{CHROM}_{start}-{end}_step_{metric}"
+        csv_path = out_dir / f"{out_stem}.csv"
+        with open(csv_path, "w", newline="") as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow([
+                "reference_position",
+                "canonical_mean",
+                "modified_mean",
+                "delta_modified_minus_canonical",
+            ])
+            for reference_position, canonical, modified in zip(
+                positions, can_mean, mod_mean
+            ):
+                writer.writerow([
+                    reference_position,
+                    canonical,
+                    modified,
+                    modified - canonical,
+                ])
         for ext in ("svg", "pdf"):
             plt.savefig(out_dir / f"{out_stem}.{ext}")
         plt.close(fig)
-        print(f"[INFO] Saved step plot: {out_stem}.svg/pdf")
+        print(f"[INFO] Saved step plot and data: {out_stem}.svg/pdf/csv")
 
 
 if __name__ == "__main__":
     main()
-
