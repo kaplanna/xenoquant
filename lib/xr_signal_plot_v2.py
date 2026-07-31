@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# xr_levels_spaghetti_lines_pub.py
+# xr_signal_plot_v2.py
 # Remora-style "compressed-time" lines per read on base coordinates (strand-aware), publication styling.
 
 from pathlib import Path
+import csv
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
@@ -14,7 +15,7 @@ from xr_params import COL_STD, COL_MOD, COL_X_HIGHLIGHT, FLANK
 
 
 
-LEVELS_TXT = "/path/to/9mer_10-4-1.tsv"
+LEVELS_TXT = "/home/marchandlab/github/kaplanna/xemora/models/remora/9mer_10-4-1.tsv"
 CHROM = "contig1"
 N_READS = 75
 
@@ -364,11 +365,31 @@ def main():
     stem = f"{workdir.name}_{xna}_{CHROM}_{start}-{end}_{RENDER_MODE}"
     svg = out_dir / f"{stem}.svg"
     pdf = out_dir / f"{stem}.pdf"
+    csv_path = out_dir / f"{stem}.csv"
+    with open(csv_path, "w", newline="") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow([
+            "sample",
+            "read_index",
+            "point_index",
+            "plot_x",
+            "normalized_signal",
+        ])
+        for sample, lines in (("canonical", can_lines), ("modified", mod_lines)):
+            for read_index, (xs, ys) in enumerate(lines, start=1):
+                for point_index, (x_value, signal) in enumerate(zip(xs, ys)):
+                    writer.writerow([
+                        sample,
+                        read_index,
+                        point_index,
+                        x_value,
+                        signal,
+                    ])
     plt.tight_layout(pad=0.9)
     plt.savefig(svg)
     plt.savefig(pdf)
     print(f"[INFO] Wrote figures: {svg} and {pdf}")
+    print(f"[INFO] Wrote plotted data: {csv_path}")
 
 if __name__ == "__main__":
     main()
-
