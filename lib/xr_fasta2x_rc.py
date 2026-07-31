@@ -5,14 +5,15 @@ xr_fasta2x_rc.py
 
 """
 ########################################################################
-########################################################################
+print("Xenoquant [Status] - Initializing Xenoquant...")
 
 import sys
+import os
 from typing import List
+from Bio.Seq import Seq
 from xr_params import *
+from xr_tools import fetch_xna_pos
 
-########################################################################
-print("Xenoquant [Status] - Initializing Xenoquant...")
 
 ########################################################################
 # Helpers
@@ -28,6 +29,17 @@ def get_confounding_base(base: str, confounding_pairs: List[str]) -> str:
     return base
 
 
+def get_xna_rc(base: str, xna_pairs: List[tuple]) -> str:
+    """Return reverse complement for an XNA base using the xna_base_pairs list."""
+    for pair in xna_pairs:
+        if base == pair[0]:
+            return pair[1]
+        elif base == pair[1]:
+            return pair[0]
+    # Default DNA complements
+    dna_rc = {"A":"T","T":"A","G":"C","C":"G","N":"N"}
+    return dna_rc.get(base, base)
+
 ########################################################################
 # Input / Output
 ########################################################################
@@ -40,6 +52,7 @@ output_fasta = sys.argv[2]
 
 detected_xfasta_header = False
 detected_xna = False
+require_rc_fasta = False
 
 ########################################################################
 # Conversion
@@ -64,6 +77,11 @@ with open(output_fasta, "w") as fout, open(input_fasta, "r") as fin:
                     # Substitution with canonical base
                     substitution_base = get_confounding_base(xna_base, confounding_pairs)
 
+
+                    # Track if this requires RC fasta (segmentation-specific bases)
+                    if xna_base in xna_segmentation_model_sets:
+                        require_rc_fasta = True
+
                     # Prepare header
                     header_x = header + "+XPOS[" + "".join(f"{xna_base}:{pos}-" for pos in x_locs)
                     header_x = header_x[:-1] + "]\n"
@@ -87,12 +105,59 @@ with open(output_fasta, "w") as fout, open(input_fasta, "r") as fin:
                 fout.write(seq + "\n")
 
 ########################################################################
+# Reverse complement FASTA (if needed)
+########################################################################
+
+if require_rc_fasta:
+    if output_fasta.endswith(".fasta"):
+        rc_name = output_fasta[:-6] + "_rc.fasta"
+    elif output_fasta.endswith(".fa"):
+        rc_name = output_fasta[:-3] + "_rc.fa"
+    else:
+        rc_name = output_fasta + "_rc.fa"
+
+    with open(rc_name, "w") as frc, open(output_fasta, "r") as fo:
+        x_pos_to_rc = []
+        for line in fo:
+            if line.startswith(">") and "GAP" not in line:
+                header = line.strip()
+                x_pos_base = fetch_xna_pos(header)
+                x_pos_to_rc = [[x[0], x[1].replace("]", "")] for x in x_pos_base]
+
+            elif not line.startswith(">") and x_pos_to_rc:
+                seq = line.strip()
+                seq_rc = str(Seq(seq).reverse_complement())
+                seq_len = len(seq_rc)
+
+                header_rc = header.split("+XPOS[")[0] + "+RC+XPOS["
+
+                for base, pos in x_pos_to_rc:
+                    rc_base = get_xna_rc(base, xna_base_pairs)
+                    rc_sub = get_confounding_base(rc_base, confounding_pairs)
+                    rc_pos = seq_len - int(pos) - 1
+                    seq_rc = seq_rc[:rc_pos] + rc_sub + seq_rc[rc_pos+1:]
+                    # XPOS coordinates are zero-based, just like the sequence
+                    # indices used above.  The mirrored coordinate is already
+                    # fully accounted for by ``length - position - 1``.
+                    header_rc += f"{rc_base}:{rc_pos}-"
+
+                header_rc = header_rc[:-1] + "]\n"
+                frc.write(header_rc)
+                frc.write(seq_rc + "\n")
+else:
+    try:
+        rmv = output_fasta.replace(".fa", "_rc") + ".fa"
+        os.remove(rmv)
+    except:
+        pass
+
+########################################################################
 # Sanity checks
 ########################################################################
 
 if detected_xfasta_header:
-    print("Xenoquant Status - [Error] Fasta input file already in xfasta format")
+    print("Xenomorph Status - [Error] Fasta input file already in xfasta format")
 elif not detected_xna:
-    print("Xenoquant Status - [Error] No XNAs detected in fasta input sequence.")
+    print("Xenomorph Status - [Error] No XNAs detected in fasta input sequence.")
 else:
     print("[xFASTA] Conversion complete.")
